@@ -76,6 +76,11 @@ int LSM9DS1Class::begin()
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x00); // Continuous conversion mode
 
+  // Enable FIFO (see docs https://www.st.com/resource/en/datasheet/DM00103319.pdf)
+  writeRegister(LSM9DS1_ADDRESS, 0x23, 0x02);
+  // Set continuous mode
+  writeRegister(LSM9DS1_ADDRESS, 0x2E, 0xC0);
+
   return 1;
 }
 
@@ -109,7 +114,8 @@ int LSM9DS1Class::readAcceleration(float& x, float& y, float& z)
 
 int LSM9DS1Class::accelerationAvailable()
 {
-  if (readRegister(LSM9DS1_ADDRESS, LSM9DS1_STATUS_REG) & 0x01) {
+  // Read FIFO_SRC. If any of the rightmost 8 bits have a value, there is data.
+  if (readRegister(LSM9DS1_ADDRESS, 0x2F) & 63) {
     return 1;
   }
 
