@@ -28,6 +28,11 @@ class LSM9DS1Class {
     int begin();
     void end();
 
+    // Controls whether a FIFO is continuously filled, or a single reading is stored.
+    // Defaults to one-shot.
+    void setContinuousMode();
+    void setOneShotMode();
+
     // Accelerometer
     virtual int readAcceleration(float& x, float& y, float& z); // Results are in G (earth gravity).
     virtual int accelerationAvailable(); // Number of samples in the FIFO.

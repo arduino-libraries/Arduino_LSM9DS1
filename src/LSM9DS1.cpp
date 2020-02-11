@@ -76,12 +76,21 @@ int LSM9DS1Class::begin()
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x00); // Continuous conversion mode
 
+  return 1;
+}
+
+void LSM9DS1Class::setContinuousMode() {
   // Enable FIFO (see docs https://www.st.com/resource/en/datasheet/DM00103319.pdf)
   writeRegister(LSM9DS1_ADDRESS, 0x23, 0x02);
   // Set continuous mode
   writeRegister(LSM9DS1_ADDRESS, 0x2E, 0xC0);
+}
 
-  return 1;
+void LSM9DS1Class::setOneShotMode() {
+  // Disable FIFO (see docs https://www.st.com/resource/en/datasheet/DM00103319.pdf)
+  writeRegister(LSM9DS1_ADDRESS, 0x23, 0x00);
+  // Disable continuous mode
+  writeRegister(LSM9DS1_ADDRESS, 0x2E, 0x00);
 }
 
 void LSM9DS1Class::end()

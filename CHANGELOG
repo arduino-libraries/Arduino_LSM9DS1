@@ -3,3 +3,7 @@ Arduino_LSM9DS1 ?.?.? - ????.??.??
 Arduino_LSM9DS1 1.0.0 - 2019.07.31
 
 * Initial release
+
+Arduino_LSM9DS1 1.1.0 - 2020.02.11
+
+* Added support for FIFO continuous reading of values
