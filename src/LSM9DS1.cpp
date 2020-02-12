@@ -39,7 +39,7 @@
 #define LSM9DS1_OUT_X_L_M          0x28
 
 LSM9DS1Class::LSM9DS1Class(TwoWire& wire) :
-  _wire(&wire)
+  continuousMode(false), _wire(&wire)
 {
 }
 
@@ -84,6 +84,8 @@ void LSM9DS1Class::setContinuousMode() {
   writeRegister(LSM9DS1_ADDRESS, 0x23, 0x02);
   // Set continuous mode
   writeRegister(LSM9DS1_ADDRESS, 0x2E, 0xC0);
+
+  continuousMode = true;
 }
 
 void LSM9DS1Class::setOneShotMode() {
@@ -91,6 +93,8 @@ void LSM9DS1Class::setOneShotMode() {
   writeRegister(LSM9DS1_ADDRESS, 0x23, 0x00);
   // Disable continuous mode
   writeRegister(LSM9DS1_ADDRESS, 0x2E, 0x00);
+
+  continuousMode = false;
 }
 
 void LSM9DS1Class::end()
@@ -123,9 +127,15 @@ int LSM9DS1Class::readAcceleration(float& x, float& y, float& z)
 
 int LSM9DS1Class::accelerationAvailable()
 {
-  // Read FIFO_SRC. If any of the rightmost 8 bits have a value, there is data.
-  if (readRegister(LSM9DS1_ADDRESS, 0x2F) & 63) {
-    return 1;
+  if (continuousMode) {
+    // Read FIFO_SRC. If any of the rightmost 8 bits have a value, there is data.
+    if (readRegister(LSM9DS1_ADDRESS, 0x2F) & 63) {
+      return 1;
+    }
+  } else {
+    if (readRegister(LSM9DS1_ADDRESS, LSM9DS1_STATUS_REG) & 0x01) {
+      return 1;
+    }
   }
 
   return 0;

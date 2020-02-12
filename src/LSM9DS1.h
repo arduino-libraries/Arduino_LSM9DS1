@@ -49,6 +49,7 @@ class LSM9DS1Class {
     virtual float magneticFieldSampleRate(); // Sampling rate of the sensor.
 
   private:
+    bool continuousMode;
     int readRegister(uint8_t slaveAddress, uint8_t address);
     int readRegisters(uint8_t slaveAddress, uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t slaveAddress, uint8_t address, uint8_t value);
