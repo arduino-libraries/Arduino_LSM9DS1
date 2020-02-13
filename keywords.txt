@@ -24,6 +24,8 @@ magneticFieldAvailable	KEYWORD2
 accelerationSampleRate	KEYWORD2
 gyroscopeSampleRate	KEYWORD2
 magneticFieldSampleRate	KEYWORD2
+setContinuousMode	KEYWORD2
+setOneShotMode	KEYWORD2
 
 #######################################
 # Constants
