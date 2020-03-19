@@ -4,6 +4,8 @@ image:https://github.com/arduino-libraries/Arduino_LSM9DS1/workflows/Compile%20E
 
 Allows you to read the accelerometer, magnetometer and gyroscope values from the LSM9DS1 IMU on your Arduino Nano 33 BLE Sense.
 
+For more information about this library please visit us at https://www.arduino.cc/en/Reference/ArduinoLSM9DS1
+
 == License ==
 
 Copyright (c) 2019 Arduino SA. All rights reserved.
