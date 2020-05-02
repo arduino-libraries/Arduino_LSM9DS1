@@ -27,7 +27,7 @@ void setup() {
   }
   Serial.print("Magnetic field sample rate = ");
   Serial.print(IMU.magneticFieldSampleRate());
-  Serial.println(" uT");
+  Serial.println(" Hz");
   Serial.println();
   Serial.println("Magnetic Field in uT");
   Serial.println("X\tY\tZ");
