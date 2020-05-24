@@ -14,19 +14,85 @@ IMU	KEYWORD1
 
 begin	KEYWORD2
 end	KEYWORD2
+setContinuousMode	KEYWORD2
+setOneShotMode	KEYWORD2
 
 readAcceleration	KEYWORD2
 readGyroscope	KEYWORD2
 readMagneticField	KEYWORD2
-gyroscopeAvailable	KEYWORD2
+
+readAccel	KEYWORD2
+readGyro	KEYWORD2
+readMagnet	KEYWORD2
+
 accelerationAvailable	KEYWORD2
+gyroscopeAvailable	KEYWORD2
 magneticFieldAvailable	KEYWORD2
+
+accelAvailable	KEYWORD2
+gyroAvailable	KEYWORD2
+magnetAvailable	KEYWORD2
+
 accelerationSampleRate	KEYWORD2
 gyroscopeSampleRate	KEYWORD2
 magneticFieldSampleRate	KEYWORD2
-setContinuousMode	KEYWORD2
-setOneShotMode	KEYWORD2
+
+setAccelerationSampleRate	KEYWORD2
+setGyroscopeSampleRate	KEYWORD2
+setMagneticFieldSampleRate	KEYWORD2
+
+accelOffset	KEYWORD2
+gyroOffset	KEYWORD2
+magnetOffset	KEYWORD2
+
+accelScale	KEYWORD2
+gyroScale	KEYWORD2
+magnetScale	KEYWORD2
+
+accelUnit	KEYWORD2
+gyroUnit	KEYWORD2
+magnetUnit	KEYWORD2
+
+accelerationFullScale	KEYWORD2
+gyroscopeFullScale	KEYWORD2
+magneticFieldFullScale	KEYWORD2
+
+setAccelerationFullScale	KEYWORD2
+setGyroscopeFullScale	KEYWORD2
+setMagneticFieldFullScale	KEYWORD2
+
+getAccelODR	KEYWORD2
+getGyroODR	KEYWORD2
+getMagnetODR	KEYWORD2
+setAccelODR	KEYWORD2
+setGyroODR	KEYWORD2
+setMagnetODR	KEYWORD2
+
+getAccelFS	KEYWORD2
+getGyroFS	KEYWORD2
+getMagnetFS	KEYWORD2
+setAccelFS	KEYWORD2
+setGyroFS	KEYWORD2
+setMagnetFS	KEYWORD2
+
+setAccelBW	KEYWORD2
+getAccelBW	KEYWORD2
+setGyroBW	KEYWORD2
+getGyroBW	KEYWORD2
+
+readAccel	KEYWORD2
+readGyro	KEYWORD2
+readMagnet	KEYWORD2
+
+
 
 #######################################
 # Constants
 #######################################
+
+GAUSS	LITERAL1
+MICROTESLA	LITERAL1
+GRAVITY	LITERAL1
+METERPERSECOND2	LITERAL1
+DEGREEPERSECOND	LITERAL1
+RADIANSPERSECOND	LITERAL1
