@@ -152,10 +152,10 @@ int LSM9DS1Class::accelAvailable()
   return 0;
 }
 
-void LSM9DS1Class::setAccelOffset(float x, float y, float z) //Look out, from measurements only
-{  accelOffset[0] = x /(accelUnit * accelSlope[0]);
-   accelOffset[1] = y /(accelUnit * accelSlope[1]);
-   accelOffset[2] = z /(accelUnit * accelSlope[2]);
+void LSM9DS1Class::setAccelOffset(float x, float y, float z) 
+{  accelOffset[0] = x /(accelUnit * gyroSlope[0]);
+   accelOffset[1] = y /(accelUnit * gyroSlope[1]);
+   accelOffset[2] = z /(accelUnit * gyroSlope[2]);
 }
 
 void LSM9DS1Class::setAccelSlope(float x, float y, float z) 
@@ -166,8 +166,8 @@ void LSM9DS1Class::setAccelSlope(float x, float y, float z)
 
 int LSM9DS1Class::setAccelODR(int8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
 {  if (range==7) range =0; 
-   range = (range & B00000111) << 5;
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & B00011111) | range);
+   range = (range & 0b00000111) << 5;
+   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b00011111) | range);
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
 }
 float LSM9DS1Class::getAccelODR()
@@ -177,9 +177,9 @@ float LSM9DS1Class::getAccelODR()
 }
 
 float LSM9DS1Class::setAccelBW(int8_t range) //0,1,2,3 Override autoBandwidth setting see doc.table 67
-{ range = range & B00000011;
-  uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & B11111000;
-  RegIs = RegIs | B00000100 | range ;
+{ range = range & 0b00000011;
+  uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b11111000;
+  RegIs = RegIs | 0b00000100 | range ;
   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,RegIs) ;
 }
 
@@ -187,12 +187,12 @@ float LSM9DS1Class::getAccelBW() //Bandwidth setting 0,1,2,3  see documentation 
 { float autoRange[] ={0.0, 408.0, 408.0, 50.0, 105.0, 211.0, 408.0, 0.0 };
   float BWXLRange[] ={ 408.0, 211.0, 105.0, 50.0 };
   uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL);
-  if (bitRead(2,RegIs))  return BWXLRange [RegIs & B00000011];    
+  if (bitRead(2,RegIs))  return BWXLRange [RegIs & 0b00000011];    
   else return autoRange [ RegIs >> 5 ];
 }
 
 int LSM9DS1Class::setAccelFS(int8_t range) // 0: ±2g ; 1: ±16g ; 2: ±4g ; 3: ±8g  
-{	range = (range & B00000011) << 3;
+{	range = (range & 0b00000011) << 3;
 	uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0xE7) | range);
 	return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
 }
@@ -228,7 +228,7 @@ int LSM9DS1Class::gyroAvailable()
   return 0;
 }
 
-void LSM9DS1Class::setGyroOffset(float x, float y, float z) //Look out, from measurements only
+void LSM9DS1Class::setGyroOffset(float x, float y, float z) 
 {  gyroOffset[0] = x /(gyroUnit * gyroSlope[0]);
    gyroOffset[1] = y /(gyroUnit * gyroSlope[1]);
    gyroOffset[2] = z /(gyroUnit * gyroSlope[2]);
@@ -242,8 +242,8 @@ void LSM9DS1Class::setGyroSlope(float x, float y, float z)
   
 int LSM9DS1Class::setGyroODR(int8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
 {  if (range==7) range =0; 
-   range = (range & B00000111) << 5;
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & B00011111) | range);
+   range = (range & 0b00000111) << 5;
+   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | range);
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;	
 }
 
@@ -254,8 +254,8 @@ float LSM9DS1Class::getGyroODR()
 }
 
 int LSM9DS1Class::setGyroBW(int8_t range)
-{  range = range & B00000011;
-   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & B11111100;
+{  range = range & 0b00000011;
+   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b11111100;
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting | range) ;	
 }
 
@@ -274,12 +274,12 @@ float BWtable[ ODRrows ][ BWcols ] =      // acc to
 float LSM9DS1Class::getGyroBW()
 {  uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) ;
    uint8_t ODR = setting >> 5;
-   uint8_t BW = setting & B00000011;
+   uint8_t BW = setting & 0b00000011;
    return BWtable[ODR][BW];
 }
    
 int LSM9DS1Class::setGyroFS(int8_t range) // (0: 245 dps; 1: 500 dps; 2: 1000  dps; 3: 2000 dps)
-{    range = (range & B00000011) << 3;	
+{    range = (range & 0b00000011) << 3;	
 	 uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0xE7) | range );
 	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
 }
@@ -316,7 +316,7 @@ int LSM9DS1Class::magneticFieldAvailable()
   return 0;
 }
 
-void LSM9DS1Class::setMagnetOffset(float x, float y, float z) //Look out, from measurements only
+void LSM9DS1Class::setMagnetOffset(float x, float y, float z) 
 {  magnetOffset[0] = x /(magnetUnit * magnetSlope[0]);
    magnetOffset[1] = y /(magnetUnit * magnetSlope[1]);
    magnetOffset[2] = z /(magnetUnit * magnetSlope[2]);
@@ -329,7 +329,7 @@ void LSM9DS1Class::setMagnetSlope(float x, float y, float z)
 }
 	
 int LSM9DS1Class::setMagnetFS(int8_t range) // 0=400.0; 1=800.0; 2=1200.0 , 3=1600.0  (µT)
-{    range = (range & B00000011) << 5;	
+{    range = (range & 0b00000011) << 5;	
 	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M,range) ;
 }
 
@@ -340,14 +340,14 @@ float LSM9DS1Class::getMagnetFS() //
 }
 
 int LSM9DS1Class::setMagnetODR(int8_t range)  // range (0..7) corresponds to {0.625,1.25,2.5,5.0,10.0,20.0,40.0,80.0}Hz
-{ range = (range & B00000111) << 2;
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & B11100011) | range);
+{ range = (range & 0b00000111) << 2;
+   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b11100011) | range);
    return writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M,setting) ;	 
 }
 
 float LSM9DS1Class::getMagnetODR()  // Output {0.625, 1.25, 2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
 { const float ranges[] ={0.625, 1.25,2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
-  uint8_t setting = (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & B00011100) >> 2;
+  uint8_t setting = (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b00011100) >> 2;
   return ranges[setting];
 }
 
