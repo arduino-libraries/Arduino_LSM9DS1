@@ -43,13 +43,6 @@
 #define LSM9DS1_STATUS_REG_M       0x27
 #define LSM9DS1_OUT_X_L_M          0x28
 
-// Add these right after defines at the beginning
-#define LSM9DS1_OFFSET_X_REG_L_M   0x05
-#define LSM9DS1_OFFSET_X_REG_H_M   0x06
-#define LSM9DS1_OFFSET_Y_REG_L_M   0x07
-#define LSM9DS1_OFFSET_Y_REG_H_M   0x08
-#define LSM9DS1_OFFSET_Z_REG_L_M   0x09
-#define LSM9DS1_OFFSET_Z_REG_H_M   0x0A
 
 LSM9DS1Class::LSM9DS1Class(TwoWire& wire) :
   continuousMode(false), _wire(&wire)
@@ -152,21 +145,26 @@ int LSM9DS1Class::accelAvailable()
   return 0;
 }
 
+//Store zero-point calibration measurement as offset, 
+//Dimension analysis: 
+//The measurement is stripped from it's unit and sensitivity it was measured with.
+//This enables independent calibration and changing the unit later
+//In a combined calibration this value must be set before setting the Slope
 void LSM9DS1Class::setAccelOffset(float x, float y, float z) 
-{  accelOffset[0] = x /(accelUnit * gyroSlope[0]);
-   accelOffset[1] = y /(accelUnit * gyroSlope[1]);
-   accelOffset[2] = z /(accelUnit * gyroSlope[2]);
+{  accelOffset[0] = x /(accelUnit * accelSlope[0]);  
+   accelOffset[1] = y /(accelUnit * accelSlope[1]);
+   accelOffset[2] = z /(accelUnit * accelSlope[2]);
 }
-
+//Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setAccelSlope(float x, float y, float z) 
 {  accelSlope[0] = x ;
    accelSlope[1] = y ;
    accelSlope[2] = z ;
 }
 
-int LSM9DS1Class::setAccelODR(int8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
-{  if (range==7) range =0; 
-   range = (range & 0b00000111) << 5;
+int LSM9DS1Class::setAccelODR(uint8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
+{  range = range << 5;
+   if (range==0b11100000) range =0; 
    uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b00011111) | range);
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
 }
@@ -176,7 +174,7 @@ float LSM9DS1Class::getAccelODR()
    return Ranges [setting];
 }
 
-float LSM9DS1Class::setAccelBW(int8_t range) //0,1,2,3 Override autoBandwidth setting see doc.table 67
+float LSM9DS1Class::setAccelBW(uint8_t range) //0,1,2,3 Override autoBandwidth setting see doc.table 67
 { range = range & 0b00000011;
   uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b11111000;
   RegIs = RegIs | 0b00000100 | range ;
@@ -191,7 +189,7 @@ float LSM9DS1Class::getAccelBW() //Bandwidth setting 0,1,2,3  see documentation 
   else return autoRange [ RegIs >> 5 ];
 }
 
-int LSM9DS1Class::setAccelFS(int8_t range) // 0: ±2g ; 1: ±16g ; 2: ±4g ; 3: ±8g  
+int LSM9DS1Class::setAccelFS(uint8_t range) // 0: ±2g ; 1: ±16g ; 2: ±4g ; 3: ±8g  
 {	range = (range & 0b00000011) << 3;
 	uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0xE7) | range);
 	return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
@@ -227,22 +225,26 @@ int LSM9DS1Class::gyroAvailable()
   }
   return 0;
 }
-
+//Store zero-point calibration measurement as offset, 
+//Dimension analysis: 
+//The measurement is stripped from it's unit and sensitivity it was measured with.
+//This enables independent calibration and changing the unit later
+//In a combined calibration this value must be set before setting the Slope
 void LSM9DS1Class::setGyroOffset(float x, float y, float z) 
-{  gyroOffset[0] = x /(gyroUnit * gyroSlope[0]);
+{  gyroOffset[0] = x /(gyroUnit * gyroSlope[0]); 
    gyroOffset[1] = y /(gyroUnit * gyroSlope[1]);
    gyroOffset[2] = z /(gyroUnit * gyroSlope[2]);
 }
-
+//Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setGyroSlope(float x, float y, float z) 
 {  gyroSlope[0] = x ;
    gyroSlope[1] = y ;
    gyroSlope[2] = z ;
 }
   
-int LSM9DS1Class::setGyroODR(int8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
-{  if (range==7) range =0; 
-   range = (range & 0b00000111) << 5;
+int LSM9DS1Class::setGyroODR(uint8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
+{  range = range << 5;
+   if (range==0b11100000) range =0; 
    uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | range);
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;	
 }
@@ -253,7 +255,7 @@ float LSM9DS1Class::getGyroODR()
    return Ranges [setting]; //   return 119.0F;
 }
 
-int LSM9DS1Class::setGyroBW(int8_t range)
+int LSM9DS1Class::setGyroBW(uint8_t range)
 {  range = range & 0b00000011;
    uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b11111100;
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting | range) ;	
@@ -261,7 +263,7 @@ int LSM9DS1Class::setGyroBW(int8_t range)
 
 #define ODRrows 8
 #define BWcols 4
-float BWtable[ ODRrows ][ BWcols ] =      // acc to 
+float BWtable[ ODRrows ][ BWcols ] =      // acc to  table 47 dataheet 
        {  { 0,  0,  0,  0   }, 
           { 0,  0,  0,  0   },
           { 16, 16, 16, 16  },
@@ -278,7 +280,7 @@ float LSM9DS1Class::getGyroBW()
    return BWtable[ODR][BW];
 }
    
-int LSM9DS1Class::setGyroFS(int8_t range) // (0: 245 dps; 1: 500 dps; 2: 1000  dps; 3: 2000 dps)
+int LSM9DS1Class::setGyroFS(uint8_t range) // (0: 245 dps; 1: 500 dps; 2: 1000  dps; 3: 2000 dps)
 {    range = (range & 0b00000011) << 3;	
 	 uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0xE7) | range );
 	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
@@ -315,20 +317,24 @@ int LSM9DS1Class::magneticFieldAvailable()
   }
   return 0;
 }
-
+//Store zero-point calibration measurement as offset, 
+//Dimension analysis: 
+//The measurement is stripped from it's unit and sensitivity it was measured with.
+//This enables independent calibration and changing the unit later
+//In a combined calibration this value must be set before setting the Slope
 void LSM9DS1Class::setMagnetOffset(float x, float y, float z) 
-{  magnetOffset[0] = x /(magnetUnit * magnetSlope[0]);
+{  magnetOffset[0] = x /(magnetUnit * magnetSlope[0]); 
    magnetOffset[1] = y /(magnetUnit * magnetSlope[1]);
    magnetOffset[2] = z /(magnetUnit * magnetSlope[2]);
 }
-
+//Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setMagnetSlope(float x, float y, float z) 
 {  magnetSlope[0] = x ;
    magnetSlope[1] = y ;
    magnetSlope[2] = z ;
 }
 	
-int LSM9DS1Class::setMagnetFS(int8_t range) // 0=400.0; 1=800.0; 2=1200.0 , 3=1600.0  (µT)
+int LSM9DS1Class::setMagnetFS(uint8_t range) // 0=400.0; 1=800.0; 2=1200.0 , 3=1600.0  (µT)
 {    range = (range & 0b00000011) << 5;	
 	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M,range) ;
 }
@@ -339,7 +345,7 @@ float LSM9DS1Class::getMagnetFS() //
   return  Ranges[setting] ;
 }
 
-int LSM9DS1Class::setMagnetODR(int8_t range)  // range (0..7) corresponds to {0.625,1.25,2.5,5.0,10.0,20.0,40.0,80.0}Hz
+int LSM9DS1Class::setMagnetODR(uint8_t range)  // range (0..7) corresponds to {0.625,1.25,2.5,5.0,10.0,20.0,40.0,80.0}Hz
 { range = (range & 0b00000111) << 2;
    uint8_t setting = ((readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b11100011) | range);
    return writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M,setting) ;	 
