@@ -14,5 +14,6 @@ Arduino_LSM9DS1 2.0.0 - 2020.05.15
 * Added support for ODR sample rate, 
 * Added support for Band width 
 * Added support for changing output unit
-* Added support for separate or combined sensor calibration
+* Added support for sensor calibration, separate or combined measurement of slope and offset
 * Calibration parameters are dimensionless, independent of each other and of the other settings
+* Added calibration examples, notes and calibration manual
