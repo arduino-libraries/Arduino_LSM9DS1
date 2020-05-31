@@ -8,12 +8,12 @@ Arduino_LSM9DS1 1.1.0 - 2020.02.11
 
 * Added support for FIFO continuous reading of values
 
-Arduino_LSM9DS1 2.0.0 - 2020.05.15
+Arduino_LSM9DS1 2.0.0 - 2020.05.30
 
 * Added support for Full scale setting, 
-* Added support for ODR sample rate, 
+* Added support for Operational mode: off, Accel only, Gyro + Accel
+* Added support for ODR sample rate, ODR values are automatically calibrated
 * Added support for Band width 
 * Added support for changing output unit
-* Added support for sensor calibration, separate or combined measurement of slope and offset
+* Added support for separate or combined sensor calibration
 * Calibration parameters are dimensionless, independent of each other and of the other settings
-* Added calibration examples, notes and calibration manual

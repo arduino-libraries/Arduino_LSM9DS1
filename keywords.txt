@@ -16,6 +16,8 @@ begin	KEYWORD2
 end	KEYWORD2
 setContinuousMode	KEYWORD2
 setOneShotMode	KEYWORD2
+getOperationalMode	KEYWORD2
+measureAccelGyroODR	KEYWORD2
 
 readAcceleration	KEYWORD2
 readGyroscope	KEYWORD2

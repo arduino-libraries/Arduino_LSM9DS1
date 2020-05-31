@@ -81,7 +81,7 @@ int LSM9DS1Class::begin()
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0xb4); // Temperature compensation enable, medium performance, 20 Hz
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x00); // Continuous conversion mode
-
+  setGyroODR(3);
   return 1;
 }
 
@@ -111,6 +111,31 @@ void LSM9DS1Class::end()
 
   _wire->end();
 }
+
+float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
+{  if (getOperationalMode()==0) return 0;
+   float x, y, z;                               //dummies
+   unsigned long lastEventTime, count = 0;   
+   duration *=1000;                             //switch to micros
+   while (count<2)                              //throw away nr of samples
+   {  if (IMU.accelAvailable())
+      { IMU.readAccel(x, y, z);  // empty read buffer
+        count++;
+      }
+   }
+   count=0;     
+   unsigned long start = micros();  
+   while ((micros()- start) < duration)           // measure
+   { if (IMU.accelAvailable())
+         {  IMU.readAccel(x, y, z);  
+            count++;
+            lastEventTime = micros();
+         }
+   }
+//   Serial.print(" Count "+String( count ) );
+   return (1000000.0*float(count)/float(lastEventTime-start) );
+}
+
 
 //************************************      Accelleration      *****************************************
 
@@ -162,16 +187,36 @@ void LSM9DS1Class::setAccelSlope(float x, float y, float z)
    accelSlope[2] = z ;
 }
 
-int LSM9DS1Class::setAccelODR(uint8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
-{  range = range << 5;
-   if (range==0b11100000) range =0; 
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b00011111) | range);
-   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
-}
+// range 0: switch off Accel and Gyro write in CTRL_REG6_XL; 
+// range !=0: switch on Accel: write range in CTRL_REG6_XL ; 
+//           Operational mode Accel + Gyro: write setting in CTRL_REG1_G, shared ODR 
+int LSM9DS1Class::setAccelODR(uint8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz
+{  if (range >= 7) return 0;
+   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b00011111) | (range << 5));
+   if (writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting)==0) return 0; 
+   switch (getOperationalMode()) {
+   case 0 :	{	accelODR=0;
+				gyroODR=0; 
+				break;
+			}
+   case 1 :	{	accelODR=  measureAccelGyroODR(350);
+				gyroODR = 0;
+				break;
+			}	
+   case 2 :	{	setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | (range << 5) );
+				writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
+				accelODR=  measureAccelGyroODR(350);
+				gyroODR = accelODR;
+			}
+   }
+   return 1;
+}   
+
 float LSM9DS1Class::getAccelODR()
-{  float Ranges[] ={0.0, 10.0, 50.0, 119.0, 238.0, 476.0, 952.0, 0.0 };
-   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL)  >> 5;
-   return Ranges [setting];
+{  return accelODR;
+//	float Ranges[] ={0.0, 10.0, 50.0, 119.0, 238.0, 476.0, 952.0, 0.0 };
+//   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL)  >> 5;
+//   return Ranges [setting];
 }
 
 float LSM9DS1Class::setAccelBW(uint8_t range) //0,1,2,3 Override autoBandwidth setting see doc.table 67
@@ -241,18 +286,48 @@ void LSM9DS1Class::setGyroSlope(float x, float y, float z)
    gyroSlope[1] = y ;
    gyroSlope[2] = z ;
 }
-  
-int LSM9DS1Class::setGyroODR(uint8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz, 7:NA
-{  range = range << 5;
-   if (range==0b11100000) range =0; 
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | range);
-   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;	
+
+int LSM9DS1Class::getOperationalMode() //0=off , 1= Accel only , 2= Gyro +Accel
+{
+  if ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b11100000) ==0 ) return 0;
+  if ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G)  & 0b11100000) ==0 ) return 1;
+  else return 2;
+}
+
+
+
+// range ==0 : switch off gyroscope - write 0 in CTRL_REG1_G; 
+// range !0  : switch on Accel+Gyro mode- write in CTRL_REG6_XL and CTRL_REG1_G;
+   
+int LSM9DS1Class::setGyroODR(uint8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, 6:952Hz
+{	if (range >= 7) return 0;
+	uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | (range << 5 ) );
+	writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting);	
+    if (range > 0 )
+	{	setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b00011111) | (range << 5));
+		writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting); 
+	}
+	switch (getOperationalMode()) {
+	case 0:	{	accelODR=0;							//off
+				gyroODR=0; 
+				break;
+			}
+	case 1:	{	accelODR=  measureAccelGyroODR(350); //accelerometer only
+				gyroODR = 0;
+				break;
+			}	
+	case 2:	{	accelODR=  measureAccelGyroODR(350); //shared ODR
+				gyroODR = accelODR;
+			}
+	}
+	return 1;
 }
 
 float LSM9DS1Class::getGyroODR()
-{  float Ranges[] ={0.0, 10.0, 50.0, 119.0, 238.0, 476.0, 952.0, 0.0 };  //Hz
-   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G)  >> 5;
-   return Ranges [setting]; //   return 119.0F;
+{  return gyroODR;
+// float Ranges[] ={0.0, 10.0, 50.0, 119.0, 238.0, 476.0, 952.0, 0.0 };  //Hz
+//   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G)  >> 5;
+//   return Ranges [setting];   //  used to be  return 119.0F;
 }
 
 int LSM9DS1Class::setGyroBW(uint8_t range)
