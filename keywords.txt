@@ -39,29 +39,25 @@ accelerationSampleRate	KEYWORD2
 gyroscopeSampleRate	KEYWORD2
 magneticFieldSampleRate	KEYWORD2
 
-setAccelerationSampleRate	KEYWORD2
-setGyroscopeSampleRate	KEYWORD2
-setMagneticFieldSampleRate	KEYWORD2
-
 accelOffset	KEYWORD2
 gyroOffset	KEYWORD2
 magnetOffset	KEYWORD2
 
-accelScale	KEYWORD2
-gyroScale	KEYWORD2
-magnetScale	KEYWORD2
+setAccelOffset	KEYWORD2
+setGyroOffset	KEYWORD2
+setMagnetOffset	KEYWORD2
+
+accelSlope	KEYWORD2
+gyroSlope	KEYWORD2
+magnetSlope	KEYWORD2
+
+setAccelSlope	KEYWORD2
+setGyroSlope	KEYWORD2
+setMagnetSlope	KEYWORD2
 
 accelUnit	KEYWORD2
 gyroUnit	KEYWORD2
 magnetUnit	KEYWORD2
-
-accelerationFullScale	KEYWORD2
-gyroscopeFullScale	KEYWORD2
-magneticFieldFullScale	KEYWORD2
-
-setAccelerationFullScale	KEYWORD2
-setGyroscopeFullScale	KEYWORD2
-setMagneticFieldFullScale	KEYWORD2
 
 getAccelODR	KEYWORD2
 getGyroODR	KEYWORD2
@@ -82,19 +78,17 @@ getAccelBW	KEYWORD2
 setGyroBW	KEYWORD2
 getGyroBW	KEYWORD2
 
-readAccel	KEYWORD2
-readGyro	KEYWORD2
-readMagnet	KEYWORD2
-
-
-
 #######################################
 # Constants
 #######################################
 
 GAUSS	LITERAL1
+NANOTESLA	LITERAL1
 MICROTESLA	LITERAL1
 GRAVITY	LITERAL1
 METERPERSECOND2	LITERAL1
 DEGREEPERSECOND	LITERAL1
 RADIANSPERSECOND	LITERAL1
+REVSPERMINUTE	LITERAL1
+REVSPERSECOND	LITERAL1
+

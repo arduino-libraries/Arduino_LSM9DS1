@@ -1,5 +1,12 @@
-/*
+/*  
   This file is part of the Arduino_LSM9DS1 library.
+  New version written by Femme Verbeek, Pijnacker, the Netherlands 
+  Released to the public domain
+  version 2
+  Release Date 5 june 2020
+  
+  Original notice:
+
   Copyright (c) 2019 Arduino SA. All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -16,9 +23,7 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   
-  Modifications by Femme Verbeek, Pijnacker, the Netherlands 23 may 2020, 
-  Released to the public domain
-  version 2.0.0
+
   
 */
 
@@ -81,9 +86,11 @@ int LSM9DS1Class::begin()
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0xb4); // Temperature compensation enable, medium performance, 20 Hz
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x00); // Continuous conversion mode
-  setGyroODR(3);
+  setGyroODR(3);     //119Hz set initial shared ODR value of accel and Gyro
+  setMagnetODR(5);   //20Hz  set initial ODR value
   return 1;
 }
+
 
 void LSM9DS1Class::setContinuousMode() {
   // Enable FIFO (see docs https://www.st.com/resource/en/datasheet/DM00103319.pdf)
@@ -116,18 +123,44 @@ float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
 {  if (getOperationalMode()==0) return 0;
    float x, y, z;                               //dummies
    unsigned long lastEventTime, count = 0;   
+   int fifoEna=continuousMode;					//switch off FiFo
+   setOneShotMode();
+   duration *=1000;                             //switch to micros
+   while (count<2)                              //throw away nr of samples, fifo enabled would be count<33;
+   {  if (accelAvailable())
+      { readAccel(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
+        count++;
+      }
+   }
+   count=0;     
+   unsigned long start = micros();
+   while ((micros()- start) < duration)           // measure
+   { if (accelAvailable())
+         {  readAccel(x, y, z);  
+            count++;
+            lastEventTime = micros();
+         }
+   }
+//   Serial.print(" Count "+String( count ) );
+    if (fifoEna) setContinuousMode(); 
+	return (1000000.0*float(count)/float(lastEventTime-start) );
+}
+
+float LSM9DS1Class::measureMagnetODR(unsigned int duration)
+{  float x, y, z;                               //dummies
+   unsigned long lastEventTime, count = 0;   
    duration *=1000;                             //switch to micros
    while (count<2)                              //throw away nr of samples
-   {  if (IMU.accelAvailable())
-      { IMU.readAccel(x, y, z);  // empty read buffer
+   {  if (magnetAvailable())
+      { readMagnet(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
         count++;
       }
    }
    count=0;     
    unsigned long start = micros();  
    while ((micros()- start) < duration)           // measure
-   { if (IMU.accelAvailable())
-         {  IMU.readAccel(x, y, z);  
+   { if (magnetAvailable())
+         {  readMagnet(x, y, z);  
             count++;
             lastEventTime = micros();
          }
@@ -136,8 +169,7 @@ float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
    return (1000000.0*float(count)/float(lastEventTime-start) );
 }
 
-
-//************************************      Accelleration      *****************************************
+//************************************      Acceleration      *****************************************
 
 int LSM9DS1Class::readAccel(float& x, float& y, float& z)
 { int16_t data[3];
@@ -182,7 +214,10 @@ void LSM9DS1Class::setAccelOffset(float x, float y, float z)
 }
 //Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setAccelSlope(float x, float y, float z) 
-{  accelSlope[0] = x ;
+{  if (x==0) x=1;  //zero slope not allowed
+   if (y==0) y=1;
+   if (z==0) z=1;
+   accelSlope[0] = x ;   
    accelSlope[1] = y ;
    accelSlope[2] = z ;
 }
@@ -220,30 +255,31 @@ float LSM9DS1Class::getAccelODR()
 }
 
 float LSM9DS1Class::setAccelBW(uint8_t range) //0,1,2,3 Override autoBandwidth setting see doc.table 67
-{ range = range & 0b00000011;
-  uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b11111000;
-  RegIs = RegIs | 0b00000100 | range ;
-  return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,RegIs) ;
+{   if (range >=4) return 0;
+    uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0b11111000;
+    RegIs = RegIs | 0b00000100 | (range & 0b00000011) ;
+    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,RegIs) ;
 }
 
 float LSM9DS1Class::getAccelBW() //Bandwidth setting 0,1,2,3  see documentation table 67
-{ float autoRange[] ={0.0, 408.0, 408.0, 50.0, 105.0, 211.0, 408.0, 0.0 };
-  float BWXLRange[] ={ 408.0, 211.0, 105.0, 50.0 };
-  uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL);
-  if (bitRead(2,RegIs))  return BWXLRange [RegIs & 0b00000011];    
-  else return autoRange [ RegIs >> 5 ];
+{   float autoRange[] ={0.0, 408.0, 408.0, 50.0, 105.0, 211.0, 408.0, 0.0 };
+    float BWXLRange[] ={ 408.0, 211.0, 105.0, 50.0 };
+    uint8_t RegIs = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL);
+    if (bitRead(RegIs,2))  return BWXLRange [RegIs & 0b00000011];    
+    else return autoRange [ RegIs >> 5 ];
 }
 
 int LSM9DS1Class::setAccelFS(uint8_t range) // 0: ±2g ; 1: ±16g ; 2: ±4g ; 3: ±8g  
-{	range = (range & 0b00000011) << 3;
+{	if (range >=4) return 0;
+    range = (range & 0b00000011) << 3;
 	uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0xE7) | range);
 	return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL,setting) ;
 }
 
-float LSM9DS1Class::getAccelFS() // Full scale (output = 2.0,  16.0 , 4.0 , 8.0)  
-{ float ranges[] ={2.0, 16.0, 4.0, 8.0}; //g
-  uint8_t setting = (readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0x18) >> 3;
-  return ranges[setting] ;
+float LSM9DS1Class::getAccelFS() // Full scale dimensionless, but its value corresponds to g
+{   float ranges[] ={2.0, 24.0, 4.0, 8.0}; //g
+    uint8_t setting = (readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL) & 0x18) >> 3;
+    return ranges[setting] ;
 }
 
 //************************************      Gyroscope      *****************************************
@@ -282,7 +318,10 @@ void LSM9DS1Class::setGyroOffset(float x, float y, float z)
 }
 //Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setGyroSlope(float x, float y, float z) 
-{  gyroSlope[0] = x ;
+{  if (x==0) x=1;  //zero slope not allowed
+   if (y==0) y=1;
+   if (z==0) z=1; 
+   gyroSlope[0] = x ;
    gyroSlope[1] = y ;
    gyroSlope[2] = z ;
 }
@@ -293,8 +332,6 @@ int LSM9DS1Class::getOperationalMode() //0=off , 1= Accel only , 2= Gyro +Accel
   if ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G)  & 0b11100000) ==0 ) return 1;
   else return 2;
 }
-
-
 
 // range ==0 : switch off gyroscope - write 0 in CTRL_REG1_G; 
 // range !0  : switch on Accel+Gyro mode- write in CTRL_REG6_XL and CTRL_REG1_G;
@@ -331,7 +368,8 @@ float LSM9DS1Class::getGyroODR()
 }
 
 int LSM9DS1Class::setGyroBW(uint8_t range)
-{  range = range & 0b00000011;
+{  if (range >=4) return 0;
+   range = range & 0b00000011;
    uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b11111100;
    return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting | range) ;	
 }
@@ -356,12 +394,13 @@ float LSM9DS1Class::getGyroBW()
 }
    
 int LSM9DS1Class::setGyroFS(uint8_t range) // (0: 245 dps; 1: 500 dps; 2: 1000  dps; 3: 2000 dps)
-{    range = (range & 0b00000011) << 3;	
-	 uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0xE7) | range );
-	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
+{  if (range >=4) return 0;
+   range = (range & 0b00000011) << 3;	
+   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0xE7) | range );
+   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
 }
 
-float LSM9DS1Class::getGyroFS() //   
+float LSM9DS1Class::getGyroFS() //   dimensionless, but its value defaults to deg/s
 { float Ranges[] ={245.0, 500.0, 1000.0, 2000.0}; //dps
   uint8_t setting = (readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0x18) >> 3;
   return Ranges[setting] ;
@@ -404,32 +443,40 @@ void LSM9DS1Class::setMagnetOffset(float x, float y, float z)
 }
 //Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setMagnetSlope(float x, float y, float z) 
-{  magnetSlope[0] = x ;
+{  if (x==0) x=1;  //zero slope not allowed
+   if (y==0) y=1;
+   if (z==0) z=1;
+   magnetSlope[0] = x ;
    magnetSlope[1] = y ;
    magnetSlope[2] = z ;
 }
 	
 int LSM9DS1Class::setMagnetFS(uint8_t range) // 0=400.0; 1=800.0; 2=1200.0 , 3=1600.0  (µT)
-{    range = (range & 0b00000011) << 5;	
-	 return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M,range) ;
+{  if (range >=4) return 0;
+   range = (range & 0b00000011) << 5;	
+   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M,range) ;
 }
 
-float LSM9DS1Class::getMagnetFS() //   
+float LSM9DS1Class::getMagnetFS() //   dimensionless, but its value defaults to µT
 { const float Ranges[] ={400.0, 800.0, 1200.0, 1600.0}; //
   uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M)  >> 5;
   return  Ranges[setting] ;
 }
 
-int LSM9DS1Class::setMagnetODR(uint8_t range)  // range (0..7) corresponds to {0.625,1.25,2.5,5.0,10.0,20.0,40.0,80.0}Hz
-{ range = (range & 0b00000111) << 2;
-   uint8_t setting = ((readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b11100011) | range);
-   return writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M,setting) ;	 
+int LSM9DS1Class::setMagnetODR(uint8_t range)  // range (0..8) = {0.625,1.25,2.5,5,10,20,40,80,400}Hz
+{ if (range >=16) return 0;
+  uint8_t setting = ((range & 0b00000111) << 2) | ((range & 0b00001000) >> 2);
+          setting = setting | (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b11100001) ;
+          writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M,setting) ;	 
+  uint16_t duration = 1750 / (range + 1);   // 1750,875,666,500,400,333,285,250,222
+  magnetODR= measureMagnetODR(duration);
 }
 
 float LSM9DS1Class::getMagnetODR()  // Output {0.625, 1.25, 2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
-{ const float ranges[] ={0.625, 1.25,2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
-  uint8_t setting = (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b00011100) >> 2;
-  return ranges[setting];
+{ return magnetODR;
+//	const float ranges[] ={0.625, 1.25,2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
+//  uint8_t setting = (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b00011100) >> 2;
+//  return ranges[setting];
 }
 
 //************************************      Private functions      *****************************************
