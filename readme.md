@@ -203,7 +203,7 @@ An interactive DIY_Calibration program is provided with this library. See [instr
 It explains how to measure each of the factors, collects data and presents the result on screen as 
 copy/paste-able code. No special setup is required, but it helps to fix the board in a non-magnetic rectangular box. 
 
-![](/images/Boxed sensor.PNG)
+![](./images/Boxed sensor.PNG)
 
 The calibration factors may be different per instance of the LSM9DS1 chip. They will hardly vary in time, 
 so it is sufficient to calibrate them only once. The magnetic field is easily disturbed by even the smallest
