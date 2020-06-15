@@ -78,13 +78,12 @@ class LSM9DS1Class {
     void setContinuousMode();
     void setOneShotMode();
     int getOperationalMode(); //0=off , 1= Accel only , 2= Gyro +Accel
-    float measureAccelGyroODR(unsigned int duration);
-    float measureMagnetODR(unsigned int duration);
     // Accelerometer
     float accelOffset[3] = {0,0,0}; // zero point offset correction factor for calibration
     float accelSlope[3] = {1,1,1};  // slope correction factor for calibration
     float accelUnit = GRAVITY;      //  GRAVITY   OR  METERPERSECOND2 
-    virtual int   readAccel(float& x, float& y, float& z); // Results are in G (earth gravity) or m/s2.
+    virtual int   readAccel(float& x, float& y, float& z); // Return calibrated data in unit of choise G or m/s2.
+    virtual int   readRawAccel(float& x, float& y, float& z); // Return uncalibrated results  
     virtual int   accelAvailable(); // Number of samples in the FIFO.
     virtual void  setAccelOffset(float x, float y, float z);  //Store zero-point measurements as offset
     virtual void  setAccelSlope(float x, float y, float z);   //Store measurements as slope
@@ -99,7 +98,8 @@ class LSM9DS1Class {
     float gyroOffset[3] = {0,0,0};      // zero point offset correction factor for calibration
     float gyroSlope[3] = {1,1,1};  		// slope correction factor for calibration
     float gyroUnit = DEGREEPERSECOND;   // DEGREEPERSECOND  RADIANSPERSECOND REVSPERMINUTE REVSPERSECOND
-    virtual int   readGyro(float& x, float& y, float& z); // Results are in degrees/second or rad/s.
+    virtual int   readGyro(float& x, float& y, float& z); // Return calibrated data in in unit of choise °/s or rad/s.
+    virtual int   readRawGyro(float& x, float& y, float& z); // Return uncalibrated results 
     virtual int   gyroAvailable(); 		// Number of samples in the FIFO.
     virtual void  setGyroOffset(float x, float y, float z);  //Store zero-point measurements as offset
     virtual void  setGyroSlope(float x, float y, float z);   //Store measurements as slope
@@ -113,8 +113,9 @@ class LSM9DS1Class {
     // Magnetometer
     float magnetOffset[3] = {0,0,0}; // zero point offset correction factor for calibration
     float magnetSlope[3] = {1,1,1};  // slope correction factor for calibration
-    float magnetUnit = MICROTESLA;  //  GAUSS  or MICROTESLA 
-    virtual int   readMagnet(float& x, float& y, float& z); // Default results are in µT (micro Tesla) 
+    float magnetUnit = MICROTESLA;  //  GAUSS,  MICROTESLA NANOTESLA
+    virtual int   readMagnet(float& x, float& y, float& z); // Return calibrated data in unit of choise µT , nT or G 
+    virtual int   readRawMagnet(float& x, float& y, float& z); // Return uncalibrated results 
     virtual int   magnetAvailable(); // Number of samples in the FIFO.
     virtual void  setMagnetOffset(float x, float y, float z);  //Store zero-point measurements as offset
     virtual void  setMagnetSlope(float x, float y, float z);   //Store measurements as slope
@@ -128,6 +129,8 @@ class LSM9DS1Class {
     float gyroODR;						// Stores the actual value of Output Data Rate
     float magnetODR;                // Stores the actual value of Output Data Rate
     bool continuousMode;
+    float measureAccelGyroODR(unsigned int duration);
+    float measureMagnetODR(unsigned int duration);
     int readRegister(uint8_t slaveAddress, uint8_t address);
     int readRegisters(uint8_t slaveAddress, uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t slaveAddress, uint8_t address, uint8_t value);

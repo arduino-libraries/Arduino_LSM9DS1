@@ -119,73 +119,32 @@ void LSM9DS1Class::end()
   _wire->end();
 }
 
-float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
-{  if (getOperationalMode()==0) return 0;
-   float x, y, z;                               //dummies
-   unsigned long lastEventTime, count = 0;   
-   int fifoEna=continuousMode;					//switch off FiFo
-   setOneShotMode();
-   duration *=1000;                             //switch to micros
-   while (count<2)                              //throw away nr of samples, fifo enabled would be count<33;
-   {  if (accelAvailable())
-      { readAccel(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
-        count++;
-      }
-   }
-   count=0;     
-   unsigned long start = micros();
-   while ((micros()- start) < duration)           // measure
-   { if (accelAvailable())
-         {  readAccel(x, y, z);  
-            count++;
-            lastEventTime = micros();
-         }
-   }
-//   Serial.print(" Count "+String( count ) );
-    if (fifoEna) setContinuousMode(); 
-	return (1000000.0*float(count)/float(lastEventTime-start) );
-}
 
-float LSM9DS1Class::measureMagnetODR(unsigned int duration)
-{  float x, y, z;                               //dummies
-   unsigned long lastEventTime, count = 0;   
-   duration *=1000;                             //switch to micros
-   while (count<2)                              //throw away nr of samples
-   {  if (magnetAvailable())
-      { readMagnet(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
-        count++;
-      }
-   }
-   count=0;     
-   unsigned long start = micros();  
-   while ((micros()- start) < duration)           // measure
-   { if (magnetAvailable())
-         {  readMagnet(x, y, z);  
-            count++;
-            lastEventTime = micros();
-         }
-   }
-//   Serial.print(" Count "+String( count ) );
-   return (1000000.0*float(count)/float(lastEventTime-start) );
-}
 
 //************************************      Acceleration      *****************************************
 
-int LSM9DS1Class::readAccel(float& x, float& y, float& z)
+int LSM9DS1Class::readAccel(float& x, float& y, float& z)  // return calibrated data in a unit of choise
+{   if (!readRawAccel(x,y,z)) return 0; 
+  // See releasenotes   	read =	Unit * Slope * (FS / 32786 * Data - Offset )
+  x = accelUnit * accelSlope[0] * (x - accelOffset[0]);
+  y = accelUnit * accelSlope[1] * (y - accelOffset[1]);
+  z = accelUnit * accelSlope[2] * (z - accelOffset[2]);
+  return 1;
+}
+
+int LSM9DS1Class::readRawAccel(float& x, float& y, float& z)   // return raw uncalibrated data 
 { int16_t data[3];
-  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_XL, (uint8_t*)data, sizeof(data))) {
-    x = NAN;
-    y = NAN;
-    z = NAN;
-    return 0;
+  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_XL, (uint8_t*)data, sizeof(data))) 
+  {  x = NAN;     y = NAN;     z = NAN;   return 0;
   }
   // See releasenotes   	read =	Unit * Slope * (PFS / 32786 * Data - Offset )
   float scale =  getAccelFS()/32768.0 ;   
-  x = accelUnit * accelSlope[0] * (scale * data[0] - accelOffset[0]);
-  y = accelUnit * accelSlope[1] * (scale * data[1] - accelOffset[1]);
-  z = accelUnit * accelSlope[2] * (scale * data[2] - accelOffset[2]);
+  x = scale * data[0];
+  y = scale * data[1];
+  z = scale * data[2];
   return 1;
 }
+
 
 int LSM9DS1Class::accelAvailable()
 {
@@ -202,11 +161,9 @@ int LSM9DS1Class::accelAvailable()
   return 0;
 }
 
-//Store zero-point calibration measurement as offset, 
-//Dimension analysis: 
-//The measurement is stripped from it's unit and sensitivity it was measured with.
-//This enables independent calibration and changing the unit later
-//In a combined calibration this value must be set before setting the Slope
+// modified: the void is no longer for translating half calibrated measurements into offsets
+// in stead the voids rawAccel()  rawGyro()  and rawMagnet must be used for calibration purposes
+
 void LSM9DS1Class::setAccelOffset(float x, float y, float z) 
 {  accelOffset[0] = x /(accelUnit * accelSlope[0]);  
    accelOffset[1] = y /(accelUnit * accelSlope[1]);
@@ -284,21 +241,26 @@ float LSM9DS1Class::getAccelFS() // Full scale dimensionless, but its value corr
 
 //************************************      Gyroscope      *****************************************
 
-int LSM9DS1Class::readGyro(float& x, float& y, float& z)
-{ int16_t data[3];
-  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_G, (uint8_t*)data, sizeof(data))) 
-  { x = NAN;
-    y = NAN;
-    z = NAN;
-    return 0;
-  }
-  float scale = getGyroFS() / 32768.0;
-  x = gyroUnit * gyroSlope[0] * (scale * data[0] - gyroOffset[0]);
-  y = gyroUnit * gyroSlope[1] * (scale * data[1] - gyroOffset[1]);
-  z = gyroUnit * gyroSlope[2] * (scale * data[2] - gyroOffset[2]);
+int LSM9DS1Class::readGyro(float& x, float& y, float& z)   // return calibrated data in a unit of choise
+{ 
+  if (!readRawGyro(x,y,z)) return 0;   //get the register values
+  x = gyroUnit * gyroSlope[0] * (x - gyroOffset[0]);
+  y = gyroUnit * gyroSlope[1] * (y - gyroOffset[1]);
+  z = gyroUnit * gyroSlope[2] * (z - gyroOffset[2]);
   return 1;
 }
 
+int LSM9DS1Class::readRawGyro(float& x, float& y, float& z)   // return raw data for calibration purposes
+{ int16_t data[3];
+  if (!readRegisters(LSM9DS1_ADDRESS, LSM9DS1_OUT_X_G, (uint8_t*)data, sizeof(data))) 
+  { x = NAN;     y = NAN;    z = NAN;   return 0;
+  }
+  float scale = getGyroFS() / 32768.0;
+  x = scale * data[0];
+  y = scale * data[1];
+  z = scale * data[2];
+  return 1;
+}
 int LSM9DS1Class::gyroAvailable()
 {
   if (readRegister(LSM9DS1_ADDRESS, LSM9DS1_STATUS_REG) & 0x02) {
@@ -306,15 +268,13 @@ int LSM9DS1Class::gyroAvailable()
   }
   return 0;
 }
-//Store zero-point calibration measurement as offset, 
-//Dimension analysis: 
-//The measurement is stripped from it's unit and sensitivity it was measured with.
-//This enables independent calibration and changing the unit later
-//In a combined calibration this value must be set before setting the Slope
+
+// modified: the void is no longer for translating half calibrated measurements into offsets
+// Instead the voids rawAccel()  rawGyro()  and rawMagnet must be used for calibration purposes
 void LSM9DS1Class::setGyroOffset(float x, float y, float z) 
-{  gyroOffset[0] = x /(gyroUnit * gyroSlope[0]); 
-   gyroOffset[1] = y /(gyroUnit * gyroSlope[1]);
-   gyroOffset[2] = z /(gyroUnit * gyroSlope[2]);
+{  gyroOffset[0] = x; 
+   gyroOffset[1] = y;
+   gyroOffset[2] = z;
 }
 //Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setGyroSlope(float x, float y, float z) 
@@ -408,21 +368,27 @@ float LSM9DS1Class::getGyroFS() //   dimensionless, but its value defaults to de
 
 //************************************      Magnetic field      *****************************************
 
-int LSM9DS1Class::readMagneticField(float& x, float& y, float& z)
-{  int16_t data[3];
-
-  if (!readRegisters(LSM9DS1_ADDRESS_M, LSM9DS1_OUT_X_L_M, (uint8_t*)data, sizeof(data))) {
-    x = NAN;
-    y = NAN;
-    z = NAN;
-    return 0;
-  }
-  float scale = getMagnetFS() / 32768.0;
-  x = magnetUnit * magnetSlope[0] * (scale * data[0] - magnetOffset[0]);
-  y = magnetUnit * magnetSlope[1] * (scale * data[1] - magnetOffset[1]);
-  z = magnetUnit * magnetSlope[2] * (scale * data[2] - magnetOffset[2]);
+int LSM9DS1Class::readMagneticField(float& x, float& y, float& z)   // return calibrated data in a unit of choise
+{ if (!readRawMagnet(x,y,z))  return 0;
+  x = magnetUnit * magnetSlope[0] * (x - magnetOffset[0]);
+  y = magnetUnit * magnetSlope[1] * (y - magnetOffset[1]);
+  z = magnetUnit * magnetSlope[2] * (z - magnetOffset[2]);
   return 1;
 }
+
+// return raw data for calibration purposes
+int LSM9DS1Class::readRawMagnet(float& x, float& y, float& z)
+{ int16_t data[3];
+  if (!readRegisters(LSM9DS1_ADDRESS_M, LSM9DS1_OUT_X_L_M, (uint8_t*)data, sizeof(data))) 
+  {  x = NAN;     y = NAN;      z = NAN;     return 0;
+  }
+  float scale = getMagnetFS() / 32768.0;
+  x = scale * data[0] ;
+  y = scale * data[1] ;
+  z = scale * data[2] ;
+  return 1;
+}
+
 
 int LSM9DS1Class::magneticFieldAvailable()
 { //return (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_STATUS_REG_M) & 0x08)==0x08;
@@ -431,15 +397,14 @@ int LSM9DS1Class::magneticFieldAvailable()
   }
   return 0;
 }
-//Store zero-point calibration measurement as offset, 
-//Dimension analysis: 
-//The measurement is stripped from it's unit and sensitivity it was measured with.
-//This enables independent calibration and changing the unit later
-//In a combined calibration this value must be set before setting the Slope
+
+// modified: the void is no longer for translating half calibrated measurements into offsets
+// Instead the voids rawAccel()  rawGyro()  and rawMagnet must be used for calibration purposes
+
 void LSM9DS1Class::setMagnetOffset(float x, float y, float z) 
-{  magnetOffset[0] = x /(magnetUnit * magnetSlope[0]); 
-   magnetOffset[1] = y /(magnetUnit * magnetSlope[1]);
-   magnetOffset[2] = z /(magnetUnit * magnetSlope[2]);
+{  magnetOffset[0] = x ; 
+   magnetOffset[1] = y ;
+   magnetOffset[2] = z ;
 }
 //Slope is already dimensionless, so it can be stored as is.
 void LSM9DS1Class::setMagnetSlope(float x, float y, float z) 
@@ -481,6 +446,55 @@ float LSM9DS1Class::getMagnetODR()  // Output {0.625, 1.25, 2.5, 5.0, 10.0, 20.0
 
 //************************************      Private functions      *****************************************
 
+float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
+{  if (getOperationalMode()==0) return 0;
+   float x, y, z;                               //dummies
+   unsigned long lastEventTime, count = 0;   
+   int fifoEna=continuousMode;					//switch off FiFo
+   setOneShotMode();
+   duration *=1000;                             //switch to micros
+   while (count<2)                              //throw away nr of samples, fifo enabled would be count<33;
+   {  if (accelAvailable())
+      { readAccel(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
+        count++;
+      }
+   }
+   count=0;     
+   unsigned long start = micros();
+   while ((micros()- start) < duration)           // measure
+   { if (accelAvailable())
+         {  readAccel(x, y, z);  
+            count++;
+            lastEventTime = micros();
+         }
+   }
+//   Serial.print(" Count "+String( count ) );
+    if (fifoEna) setContinuousMode(); 
+	return (1000000.0*float(count)/float(lastEventTime-start) );
+}
+
+float LSM9DS1Class::measureMagnetODR(unsigned int duration)
+{  float x, y, z;                               //dummies
+   unsigned long lastEventTime, count = 0;   
+   duration *=1000;                             //switch to micros
+   while (count<2)                              //throw away nr of samples
+   {  if (magnetAvailable())
+      { readMagnet(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
+        count++;
+      }
+   }
+   count=0;     
+   unsigned long start = micros();  
+   while ((micros()- start) < duration)           // measure
+   { if (magnetAvailable())
+         {  readMagnet(x, y, z);  
+            count++;
+            lastEventTime = micros();
+         }
+   }
+//   Serial.print(" Count "+String( count ) );
+   return (1000000.0*float(count)/float(lastEventTime-start) );
+}
 
 int LSM9DS1Class::readRegister(uint8_t slaveAddress, uint8_t address)
 {

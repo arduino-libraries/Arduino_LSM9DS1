@@ -8,7 +8,7 @@ Arduino_LSM9DS1 1.1.0 - 2020.02.11
 
 * Added support for FIFO continuous reading of values
 
-Arduino_LSM9DS1 2.0.0 - 2020.05.30
+Arduino_LSM9DS1 2.0.0 - 2020.06.15
 
 * Added support for Full scale setting, 
 * Added support for Operational mode: off, Accel only, Gyro + Accel
@@ -17,3 +17,7 @@ Arduino_LSM9DS1 2.0.0 - 2020.05.30
 * Added support for changing output unit
 * Added support for separate or combined sensor calibration
 * Calibration parameters are dimensionless, independent of each other and of the other settings
+* Includes a DIY calibration program that produces copy/paste-able code
+* Inclues readme.md and Getting Started.md
+* Inclues examples RPM_meter_Rev_Counter, Water_Leveler, XY_Compass
+* Inclues Register_test: demonstrates and verifies all new settings

@@ -26,6 +26,9 @@ readMagneticField	KEYWORD2
 readAccel	KEYWORD2
 readGyro	KEYWORD2
 readMagnet	KEYWORD2
+readRawAccel	KEYWORD2
+readRawGyro	KEYWORD2
+readRawMagnet	KEYWORD2
 
 accelerationAvailable	KEYWORD2
 gyroscopeAvailable	KEYWORD2
