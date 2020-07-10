@@ -5,7 +5,15 @@
 ### 11 june 2020
 
 ----------------------------------------------------------------------------
+links:
 
+[LSM9DS1 datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
+
+[DIY Calibration instruction video](https://youtu.be/BLvYFXoP33o)
+
+[Information about Earth Magnetic field](https://en.wikipedia.org/wiki/Earth%27s_magnetic_field)
+
+-----------------------------------------------------------------------------
 ## Contents: 	
 1. Introduction
 1. Naming strategy
@@ -31,29 +39,31 @@ In my case the magnetic field offset was larger than the Earth magnetic field. T
 like much, but when trying to track the orientation it corresponds to a full circle misalignment in two minutes. Without 
 calibration it is impossible to make a working magnetic or gyro compass, artificial horizon etc.
 
-This new version 2 provides a simple DIY calibration program that gives instructions on how to do measurements. It returns
-the parameters on screen so that they can be copy/pasted directly into the code of a sketch. For a rough calibration you 
-have to do this only once per instance of the chip. But the magnetic field is very easily disturbed. In a different set-up 
-the chip may return completely different magnetic values.
+This new version 2 provides three DIY calibration sketches, for the accelerometer, gyroscope and magnetometer. They give instructions
+on what to do during a calibration measurement. For more clarity a [DIY Calibration instruction video](https://youtu.be/BLvYFXoP33o) was made.
+The DIY calibration sketches return the results on screen as code that can be copy/pasted in a sketch. For a rough calibration you 
+have to do this only once per instance of the chip. But the magnetic field measurement is very easily disturbed by the set-up
+the chip is mounted in. So for the magnetometer it is advised to do an in-situ calibration. 
 
-In spite of some examples, this library does not prescribe the methods for measuring or calibrating, provide quaternions or
-Euler transformations. The development of these is still the task of the user of this library. The examples are kept as simple
-as possible and are just for learning. 
+The calibration method in this library gives a rather basic linear correction, which will be sufficient in most cases. 
+When used in combination with sensor fusion algorithms, quaternions, Euler transformations, those libraries usually come with 
+their own calibration methods. In those cases it may be better not to use the built-in calibration of this library.  
+
 
 New for all 9 DOF (degrees of freedom) is the possibility:
 * to change the Output Data Rate (ODR), including fast rate magnetic sampling. The values returned by get...ODR are 
       now the actual values rather than those in the documentation.   
-* to change the internal full scale setting of the chip (FS) giving it more accuracy at the expence of the range 
+* to change the internal full scale setting of the chip (FS) giving it more accuracy at the expense of the range 
 * to change the band width filtering of the chip
 * to change the output unit
 * to give it calibration zero offset and slope factors
 * to change the operational mode (off, Acceleration only, Acceleration + Gyroscope
 
 The values returned by the read... methods change according to the settings. If left to their default, the output will still
-be the same as from version 1.1.0. 
-The way this is organised is rather unique. (mathematical derivation at the end of this document)
+be the same as from version 1.1.0. One exception was made for the magnetometer. The default sample rate of 20Hz did not work on 
+all set-ups. It has been changed to 40Hz. If you really need the 20Hz, the sketch call is *IMU.setMagnetODR(5);*
 
-All the settings and calibration factors are independent of each other. 
+In theory all the settings and calibration factors are independent of each other. 
 
 This means that 
 * changing the FS does not change the read... value, giving it more accuracy at the expense of the range.
@@ -61,14 +71,18 @@ This means that
 * calibration can be done in any chosen Unit, FS, ODR, 
 * the calibration factors can be copy/pasted in a sketch. They dont need changing when the sketch
 uses any other setting combination of Unit, FS or ODR.
- 
+
+In reality the gyroscope offset showed a small dependence on the FS setting. For this reason the possibility to change the settings
+was added in the DIY calibration sketches. This improved the drift behavior of the gyro significantly.
+
 -------------------------------------------------
 ## 2 Naming strategy
 -------------------------------------------------
 
+This new version 2.0 of the library supports al the function calls available in version 1.1.0
 Keeping the same naming convention of version 1.1.0 resulted in very long names for the new functions, making formulas
 difficult to read, increasing the chance of making typo's and it was not always clear what was meant. 
-For this reason a number of shorter aliases were created most of them following the [datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
+For this reason a number of shorter aliases were created, most of them following the [datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 
 new  	|	alias
 -----	| ---------------
@@ -86,7 +100,7 @@ a constant but a function corresponding to the LSM9DS1 chip setting.
 
 Not used were the datasheet's XL, M and G since it may confuse with gravity, Gauss and of course the size of clothes. :tshirt:
 
-#### In the text below   ...   stands for any of the three measurement properties, Accell, Gyro, or Magnet. 
+#### In the text below   ...   stands for any of the three measurement properties, Accel, Gyro, or Magnet. 
 
 ------------------------------------------
 ## 3 Output of Read method
@@ -112,15 +126,15 @@ Unit = the unit the measured physical property is expressed in.
 Slope and Offset = calibration parameters.
 
 readRaw... produces dimensionless uncalibrated output and is the method to be used when calibrating.
-read... produces calibrated output in the unit of your choise. 
+read... produces calibrated output in the unit of your choice. 
 
 Note that when Unit, Slope and Offset are left to their default values, the read... and readRaw... methods 
 produce the same output, identical to that of library version 1.01.
 
-Measuring the offset shows that it scales with the chip internal full scale setting (IFS). That means that it is caused 
+Measuring the offset shows that it scales roughly with the chip internal full scale setting (IFS). That means that it is caused 
 by the internal transducer and not by the ADC. So it is sufficient to calibrate for just one of the full scale settings 
-and compensate for the others by means of a multiplication (FS).  
-
+and compensate for the others by means of a multiplication (FS). The small dependency of the gyroscope offset on the FS setting 
+was discovered only recently. Calibrating and running at the same FS setting improved the accuracy especially of the gyro drift.  
 
 ------------------------------------------
 ## 4 Output Data Rate (ODR)
@@ -145,10 +159,14 @@ The ODR values According to the datasheet
 |7   |  | | 80 Hz|
 |8   |  | | 400 Hz|
 
+As it turned out the actual ODR values could deviate significantly from the ones in the datasheet. 
+For that reason the set...ODR functions quickly measure the actual ODR value upon calling. This
+actual value is returned by the get...ODR functions. 
+Settings 6 of Accel and Gyro were supposed to deliver 952 Hz. The result was hardly 
+faster than that of setting 5 but with a lot more noise. For this reason it is not adviced to use them.
 
-As it turned out the actual ODR could deviate significantly from the datasheet values.
-The set...ODR voids measure of the atual ODR value in about 0.35s. This value is returned by 
-the get...ODR functions. This causes a delay of 0.7s on the start-up of the program. 
+The magnetometer settings 0..5 turned out not to be working on a separate LSM9DS1 connected to an Arduino Uno 
+On the same set-up setAccelODR(1) and setGyroODR(1) did not work either.
 
 To save on power demand the Gyro or both Gyro+Accel can be switched off by setting ...ODR(0). 
 In any other setting Gyro and Accel share their ODR, so changing one, changes the other. 
@@ -167,20 +185,20 @@ FS settings
 | nr |setAccelFS(nr)| setGyroFS(nr)|setMagnetFS(nr) |
 |:----:|:-------------:|:-------------:|:-----------------:|
 |0   | ±2 g	| ±245 °/s | ±400 µT|
-|1   | ±24 g | ±500 °/s	| ±800 µT|
-|2   | ±4 g	| ±1000 °/s	| ±1200 µT|
-|3   | ±8 g	| ±2000 °/s	| ±1600 µT|
+|1   | ±24 g | ±500 °/s	| NA (±800 µT)|
+|2   | ±4 g	| ±1000 °/s	| NA (±1200 µT)|
+|3   | ±8 g	| ±2000 °/s	| NA (±1600 µT)|
 
 Datasheet anomalies
 *  Upon  *setAccelFS(1);*  the needed multiplication factor should be 16 but turns out to be 24, 
    but the sensor maxes out at 20 g  
-*  The   *setGyroFS(2);  is *NA* according to the datasheet, but when tested it worked nicely at 1000 °/s 
+*  The   *setGyroFS(2);*  is *NA* according to the datasheet, but when tested it worked nicely at 1000 °/s 
 
 -------------------------------------------------
 ## 6 Band Witdh setting (BW)
 --------------------------------------------------
 
-The possibility of setting the band width filtering was added for the purpose of geting rid of a very nasty 
+The possibility of setting the band-width filtering was added for the purpose of getting rid of a very nasty 
 spike in the gyro/accel signal at the highest ODR. It turned out that there was no influence on the spike at all.
 The methods are provided "as is". The set values can be found in the [datasheet](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf)
 tables 46, 47 and 67. 
@@ -203,7 +221,7 @@ An interactive DIY_Calibration program is provided with this library. See [instr
 It explains how to measure each of the factors, collects data and presents the result on screen as 
 copy/paste-able code. No special setup is required, but it helps to fix the board in a non-magnetic rectangular box. 
 
-![](/images/Boxed sensor.PNG)
+![](/images/Boxed_sensor.PNG)
 
 The calibration factors may be different per instance of the LSM9DS1 chip. They will hardly vary in time, 
 so it is sufficient to calibrate them only once. The magnetic field is easily disturbed by even the smallest
@@ -218,7 +236,7 @@ If you want the fusion program to be using a changed ODR or FS setting, you may 
 in the library itself in the file LSM9DS1.CPP / in the method int LSM9DS1Class::begin()
 No guarantee that it works. 
 
-If you want to design your own calibration method, the text below gives a more explanation on what to do.
+If you want to design your own calibration method, the text below gives more explanation on what to do.
 It is vital that the calibration measurements are done with the raw... functions to get uncalibrated data
 
 ------------------------------------------------------------------------------------------
@@ -251,17 +269,17 @@ each. Most probably these are the outlyers in both directions, so actually the w
 
 Calculating separate averages of the min and max values is a better method but also like a chicken and egg problem. 
 Before the calibration program can decide to which average a measurement belongs, it needs a rough calibration first.
-If the offset is very large, like in case of the magment, this is not straight forward. The DIY calibration program 
-uses the fastrate magnet ODR and simply caluculates a lot of averages and takes the min and max of that.
+If the offset is very large, like in case of the magnet, this is not straight forward. The DIY calibration program 
+uses the fastrate magnet ODR and simply calculates a lot of averages and takes the min and max of that.
 
 The best method is probably 3D elliptical regression, where the values of Offset correspond to the centre of the 
-elliptoid. So far I did not venture into the mathematics of this. :dizzy_face:
+ellipsoid. So far I did not venture into the mathematics of this. :dizzy_face:
 
 --------------------------------------------------------------------------------------------------------------------
 ### Slope 
 
 Slope is a dimensionless number that compensates for the sensitivity of the chip's internal transducer. Ideally it's value 
-should equal 1, meaning that the sensitivity is what it's suppost to be. I my case the accelerometer was very close, the 
+should equal 1, meaning that the sensitivity is what it's supposed to be. I my case the accelerometer was very close, the 
 gyro 17%, 13% and 4% to low, the magnetometer 5%, 4% and 7% too high. For the magnet and the Accel only their relative 
 values matter, but for the Gyro it's the absolute value if you want to keep track of orientation. 17% means 61 degrees 
 misalignment on a full turn.
@@ -277,10 +295,16 @@ The slope calibration values are stored in the arrays
 ```
    ...Slope[3]={1,1,1} 
 ```
-The local data of the magnetic field (in nT) can be found at [Wikipedia](https://en.wikipedia.org/wiki/Earth%27s_magnetic_field)
-By pointing the sensor axes in both ways in the direction of the magnetis field lines the difference in reading should be 
-2x the given fieldstrength. 
-![](/images/Aim axes along magnetic field lines.PNG)
+E.g. The local data of the magnetic field (in nT) can be found at [Wikipedia](https://en.wikipedia.org/wiki/Earth%27s_magnetic_field)
+By pointing the sensor axes in both ways in the direction of the magnetic field-lines the difference in reading should be 
+2x the given field intensity. So 
+```
+   magnetSlope[i]= (2*Intensity)/(NANOTESLA*(readRawMagnet_1 -readRawMagnet_2))
+```
+
+![](/images/Aim_axes_along_magnetic_field_lines.PNG)
+
+
 E.g. the Earth gravity should produce a value of 1g. Holding the board upside down should measure -1g. So the difference
 ```	
 	( Q_1 - Q_2) = 2g  
@@ -383,7 +407,7 @@ Methods for setting the calibration
 ```
 
 New: changing the full scale sensitivity of the sensors.
-The functions modify the FS (full scale) registers of the LSM9DS1 chip changing sensitivity at the expence of range.
+The functions modify the FS (full scale) registers of the LSM9DS1 chip changing sensitivity at the expense of range.
 Changing this setting does not change the x,y,z output of the read functions, but assigns just more or less bits
 to the sensor measurement. 
 ```
@@ -416,6 +440,8 @@ observable effect. The methods are provided as is.
 
 Sorry for the very formal derivation below. It suits verifiability but probably only my own purpose :nerd_face:
 It took a lot of puzzling to get it right. Don't read it if you don't want to. :dizzy_face:
+The readRaw... method was introduced after this derivation was written. ReadRaw... produces output equal to Read... but with
+boundary conditions Offset=0, Slope=1 and unit = 1 (default). 
 
 -----------------
 ### Offset 
@@ -426,13 +452,13 @@ Assuming good linearity of the transducer, we can model the data output of the c
 
 Data = the measured value showing up on the chip registers
 Q = the actual physical quantity we are trying to measure in any of the 9 DOF
-IFS = the chip Internal Fullscale Setting.  
+IFS = the chip Internal Full Scale Setting.  
 A,B unknown constants representing chip instance differences
 
 Since the chip outputs dimensionless bits and bytes only, the dimensions of IFS and B must equal the dimension of Q.  
 
 The challenge is to get rid of the unknown constants A and B and translate them into measurable quantities produced by the 
-library's Read methods. Since a good calibrated Read should produce a number equal to the actual physical quantity 
+library's Read methods. Since the calibrated Read should produce a number equal to the actual physical quantity 
 we can state  
 
 			Read = Q	
@@ -529,7 +555,7 @@ and with eq(8)
 			
 			Slope 	= 1 / A
  
-So Slope only depends on A, the (in)sensitivity of the sensor. The proportionality is inverse since Slope is the
+So Slope only depends on A, the (in)sensitivity of the sensor. The proportionality is reciprocal since Slope is the
 compensation factor for the chip's insensitivity
 
 QED

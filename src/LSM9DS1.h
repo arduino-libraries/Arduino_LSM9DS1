@@ -125,12 +125,14 @@ class LSM9DS1Class {
     virtual float getMagnetFS(); //  get chip's full scale setting  
 
   private:
-    float accelODR;					// Stores the actual value of Output Data Rate
+    unsigned long ODRCalibrationTime=250000; //µs
+    float accelODR;					    // Stores the actual value of Output Data Rate
     float gyroODR;						// Stores the actual value of Output Data Rate
-    float magnetODR;                // Stores the actual value of Output Data Rate
+    float magnetODR;                    // Stores the actual value of Output Data Rate
     bool continuousMode;
-    float measureAccelGyroODR(unsigned int duration);
-    float measureMagnetODR(unsigned int duration);
+    void measureODRcombined();
+    float measureAccelGyroODR();
+    float measureMagnetODR(unsigned long duration);
     int readRegister(uint8_t slaveAddress, uint8_t address);
     int readRegisters(uint8_t slaveAddress, uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t slaveAddress, uint8_t address, uint8_t value);

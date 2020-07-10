@@ -23,14 +23,16 @@ void setup()
    {   Serial.println("Failed to initialize IMU!");
        while (1); 
    }
-   IMU.setGyroODR(5);                       //476Hz   
+
    IMU.gyroUnit =  REVSPERMINUTE ;          //change output unit of readGyro
 
 //************        In order for this program to work properly, it needs calibration           ****************
 //************  Replace the lines below by the Gyroscope output of the DIY Calibration program   ****************
 
-   IMU.gyroOffset[0] = 0;   IMU.gyroOffset[1] = 0;   IMU.gyroOffset[2] = 0;  
-   IMU.gyroSlope [0] = 1;   IMU.gyroSlope [1] = 1;   IMU.gyroSlope [2] = 1;  
+   IMU.setGyroFS(3);
+   IMU.setGyroODR(5);
+   IMU.setGyroOffset (0.00, 0.00, 0.00);
+   IMU.setGyroSlope (1.00, 1.00, 1.00);
 
 //*****************************************************************************************************************     
     Serial.println("RPM_X \t RPM_Y \t RPM_Z \t Revs_X \t Revs_y \t Revs_Z ");   // legend in case you use the serial plotter

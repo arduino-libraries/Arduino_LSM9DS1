@@ -1,9 +1,9 @@
 /*  
   This file is part of the Arduino_LSM9DS1 library.
-  New version written by Femme Verbeek, Pijnacker, the Netherlands 
+  This version written by Femme Verbeek, Pijnacker, the Netherlands 
   Released to the public domain
   version 2
-  Release Date 5 june 2020
+  Release Date 10 July 2020
   
   Original notice:
 
@@ -45,6 +45,7 @@
 #define LSM9DS1_CTRL_REG1_M        0x20
 #define LSM9DS1_CTRL_REG2_M        0x21
 #define LSM9DS1_CTRL_REG3_M        0x22
+#define LSM9DS1_CTRL_REG4_M        0x23
 #define LSM9DS1_STATUS_REG_M       0x27
 #define LSM9DS1_OUT_X_L_M          0x28
 
@@ -83,11 +84,14 @@ int LSM9DS1Class::begin()
   writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G, 0x78); // 119 Hz, 2000 dps, 16 Hz BW
   writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL, 0x70); // 119 Hz, 4G
 
-  writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0xb4); // Temperature compensation enable, medium performance, 20 Hz
+  writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0b10111000); // Temperature compensation enable, medium performance, 40 Hz
+//  writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M, 0xb4); // Temperature compensation enable, medium performance, 20 Hz
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0x00); // 4 Gauss
+//  writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M, 0b01100000); // 16 Gauss
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x00); // Continuous conversion mode
-  setGyroODR(3);     //119Hz set initial shared ODR value of accel and Gyro
-  setMagnetODR(5);   //20Hz  set initial ODR value
+  writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG4_M, 0b00000100); // Z-axis operative mode medium performance
+
+  measureODRcombined() ;  // for Accelerometer/Gyro and Magnetometer.
   return 1;
 }
 
@@ -106,7 +110,7 @@ void LSM9DS1Class::setOneShotMode() {
   writeRegister(LSM9DS1_ADDRESS, 0x23, 0x00);
   // Disable continuous mode
   writeRegister(LSM9DS1_ADDRESS, 0x2E, 0x00);
-
+ 
   continuousMode = false;
 }
 
@@ -115,6 +119,8 @@ void LSM9DS1Class::end()
   writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG3_M, 0x03);
   writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G, 0x00);
   writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG6_XL, 0x00);
+  pinMode(PIN_ENABLE_I2C_PULLUP, OUTPUT);    // this restores the energy usage to very low power
+  digitalWrite(PIN_ENABLE_I2C_PULLUP, HIGH); // see https://forum.arduino.cc/index.php?topic=691488.15
 
   _wire->end();
 }
@@ -191,13 +197,13 @@ int LSM9DS1Class::setAccelODR(uint8_t range) //Sample Rate 0:off, 1:10Hz, 2:50Hz
 				gyroODR=0; 
 				break;
 			}
-   case 1 :	{	accelODR=  measureAccelGyroODR(350);
+   case 1 :	{	accelODR=  measureAccelGyroODR();
 				gyroODR = 0;
 				break;
 			}	
    case 2 :	{	setting = ((readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G) & 0b00011111) | (range << 5) );
 				writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG1_G,setting) ;
-				accelODR=  measureAccelGyroODR(350);
+				accelODR=  measureAccelGyroODR();
 				gyroODR = accelODR;
 			}
    }
@@ -309,11 +315,11 @@ int LSM9DS1Class::setGyroODR(uint8_t range) // 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4
 				gyroODR=0; 
 				break;
 			}
-	case 1:	{	accelODR=  measureAccelGyroODR(350); //accelerometer only
+	case 1:	{	accelODR=  measureAccelGyroODR(); //accelerometer only
 				gyroODR = 0;
 				break;
 			}	
-	case 2:	{	accelODR=  measureAccelGyroODR(350); //shared ODR
+	case 2:	{	accelODR=  measureAccelGyroODR(); //shared ODR
 				gyroODR = accelODR;
 			}
 	}
@@ -419,26 +425,26 @@ void LSM9DS1Class::setMagnetSlope(float x, float y, float z)
 int LSM9DS1Class::setMagnetFS(uint8_t range) // 0=400.0; 1=800.0; 2=1200.0 , 3=1600.0  (µT)
 {  if (range >=4) return 0;
    range = (range & 0b00000011) << 5;	
-   return writeRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M,range) ;
+   return writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M,range) ;
 }
 
 float LSM9DS1Class::getMagnetFS() //   dimensionless, but its value defaults to µT
 { const float Ranges[] ={400.0, 800.0, 1200.0, 1600.0}; //
-  uint8_t setting = readRegister(LSM9DS1_ADDRESS, LSM9DS1_CTRL_REG2_M)  >> 5;
+  uint8_t setting = readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG2_M)  >> 5;
   return  Ranges[setting] ;
 }
 
 int LSM9DS1Class::setMagnetODR(uint8_t range)  // range (0..8) = {0.625,1.25,2.5,5,10,20,40,80,400}Hz
 { if (range >=16) return 0;
-  uint8_t setting = ((range & 0b00000111) << 2) | ((range & 0b00001000) >> 2);
+  uint8_t setting = ((range & 0b00000111) << 2) | ((range & 0b00001000) >> 2);  // bit 2..4 see table 111, bit 1 = FAST_ODR
           setting = setting | (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b11100001) ;
           writeRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M,setting) ;	 
-  uint16_t duration = 1750 / (range + 1);   // 1750,875,666,500,400,333,285,250,222
-  magnetODR= measureMagnetODR(duration);
+  uint16_t duration = 1750 / (range + 1);   // 1750,875,666,500,400,333,285,250,222  calculate measuring time
+  magnetODR= measureMagnetODR(duration);    //measure the actual ODR value
 }
 
 float LSM9DS1Class::getMagnetODR()  // Output {0.625, 1.25, 2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
-{ return magnetODR;
+{ return magnetODR;                 // return previously measured value
 //	const float ranges[] ={0.625, 1.25,2.5, 5.0, 10.0, 20.0, 40.0 , 80.0}; //Hz
 //  uint8_t setting = (readRegister(LSM9DS1_ADDRESS_M, LSM9DS1_CTRL_REG1_M) & 0b00011100) >> 2;
 //  return ranges[setting];
@@ -446,53 +452,79 @@ float LSM9DS1Class::getMagnetODR()  // Output {0.625, 1.25, 2.5, 5.0, 10.0, 20.0
 
 //************************************      Private functions      *****************************************
 
-float LSM9DS1Class::measureAccelGyroODR(unsigned int duration)
+void LSM9DS1Class::measureODRcombined()        //Combined measurement for faster startUp.
+{ float x, y, z; 
+  unsigned long lastEventTimeA,lastEventTimeM,startA,startM;
+  long countA=-3, countM = -2, countiter=0;    //Extra cycles to compensate for slow startup
+  unsigned long start = micros();
+  while ((micros()- start) < ODRCalibrationTime)
+  {  countiter++;
+	 if (accelAvailable())
+        {  lastEventTimeA = micros();
+           readAccel(x, y, z);  
+           countA++; 
+           if (countA==0) {startA=lastEventTimeA;
+		                   start=lastEventTimeA;}
+	    }
+    if (magnetAvailable())
+        {  lastEventTimeM = micros();
+	       readMagnet(x, y, z);  
+           countM++;
+		   if (countM==0) startM=lastEventTimeM;
+        }
+  }
+//    Serial.println("measure combined " );
+//    Serial.println("countA= "+String(countA)   );
+//    Serial.println("countM= "+String(countM)   );
+//    Serial.println("countiter= "+String(countiter)   );
+//    Serial.println("dTa= "+String(lastEventTimeA-startA)   );
+//    Serial.println("dTb= "+String(lastEventTimeM-startM)   );
+	
+    accelODR= (1000000.0*float(countA)/float(lastEventTimeA-startA) );
+    gyroODR = accelODR;
+    magnetODR= (1000000.0*float(countM)/float(lastEventTimeM-startM) );
+}	
+
+float LSM9DS1Class::measureAccelGyroODR()
 {  if (getOperationalMode()==0) return 0;
    float x, y, z;                               //dummies
-   unsigned long lastEventTime, count = 0;   
-   int fifoEna=continuousMode;					//switch off FiFo
-   setOneShotMode();
-   duration *=1000;                             //switch to micros
-   while (count<2)                              //throw away nr of samples, fifo enabled would be count<33;
-   {  if (accelAvailable())
-      { readAccel(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
-        count++;
-      }
-   }
-   count=0;     
-   unsigned long start = micros();
-   while ((micros()- start) < duration)           // measure
+   unsigned long lastEventTime, 
+                 start=micros(); 
+   long count = -3;   
+   int fifoEna=continuousMode;                  //store FIFO status
+   setOneShotMode();  	                        //switch off FIFO
+   while ((micros()- start) < ODRCalibrationTime)         // measure
    { if (accelAvailable())
-         {  readAccel(x, y, z);  
+         {  lastEventTime = micros();
+            readAccel(x, y, z);  
             count++;
-            lastEventTime = micros();
+            if (count<=0) start=lastEventTime;
          }
    }
-//   Serial.print(" Count "+String( count ) );
-    if (fifoEna) setContinuousMode(); 
+//    Serial.println("measureAccelGyroODR Count "+String( count ) );
+//    Serial.println("dTa= "+String(lastEventTime-start)   );
+//    Serial.println("ODR= "+String(1000000.0*float(count)/float(lastEventTime-start))   ); 
+	if (fifoEna) setContinuousMode(); 
 	return (1000000.0*float(count)/float(lastEventTime-start) );
 }
 
-float LSM9DS1Class::measureMagnetODR(unsigned int duration)
+float LSM9DS1Class::measureMagnetODR(unsigned long duration)
 {  float x, y, z;                               //dummies
-   unsigned long lastEventTime, count = 0;   
+   unsigned long lastEventTime, 
+                 start =micros(); 
+   long count = -2;        // waste current registervalue and running cycle
    duration *=1000;                             //switch to micros
-   while (count<2)                              //throw away nr of samples
-   {  if (magnetAvailable())
-      { readMagnet(x, y, z);  // empty read buffer and wait till current measurement is finished, empty again
-        count++;
-      }
-   }
-   count=0;     
-   unsigned long start = micros();  
    while ((micros()- start) < duration)           // measure
    { if (magnetAvailable())
-         {  readMagnet(x, y, z);  
+         {  lastEventTime = micros();
+	        readMagnet(x, y, z);  
             count++;
-            lastEventTime = micros();
+            if (count<=0) start=lastEventTime;
          }
    }
-//   Serial.print(" Count "+String( count ) );
+//   Serial.println("MeasureMagnetODR Count "+String( count ) );
+//   Serial.println("dTa= "+String(lastEventTime-start)   );
+//   Serial.println("ODR= "+String(1000000.0*float(count)/float(lastEventTime-start) )) ;
    return (1000000.0*float(count)/float(lastEventTime-start) );
 }
 

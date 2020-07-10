@@ -17,11 +17,14 @@ void setup() {
    if (!IMU.begin()) {Serial.println("Failed to initialize IMU!"); while (1);  }
    IMU.setAccelODR(5);  //476 Hz
 
-//*****************  Replace the lines below by the accelerometer output of the DIY Calibration program   *******************
+//*****************         In order for this program to work properly, it needs calibration              ****************
+//*****************  Replace the lines below by the accelerometer output of the DIY Calibration program   ****************
 
-   IMU.accelOffset[0] = 0;   IMU.accelOffset[1] = 0;   IMU.accelOffset[2] = 0;  
-   IMU.accelSlope [0] = 1;   IMU.accelSlope [1] = 1;   IMU.accelSlope [2] = 1;  
-  
+   IMU.setAccelFS(3);
+   IMU.setAccelODR(5);
+   IMU.setAccelOffset(0.00, 0.00, 0.00);
+   IMU.setAccelSlope (1.00, 1.00, 1.00);
+     
 //****************************************************************************************************************************     
    Serial.println("pitchX\tpitchY"); //shows in the legend of the serial plotter.
 }
