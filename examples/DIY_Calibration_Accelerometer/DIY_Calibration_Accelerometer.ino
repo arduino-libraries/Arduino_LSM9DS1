@@ -28,8 +28,8 @@ float maxAX = 1, maxAY=1, maxAZ=1, minAX=-1, minAY=-1, minAZ=-1; // Accel Slope
 float zeroAX1 =0,zeroAX2 =0,zeroAY1 =0,zeroAY2 =0,zeroAZ1 =0,zeroAZ2 =0;  //Accel Offset
 boolean accelOK=false;
 uint8_t acceMMlOK=0; // bit 0..2 maxXYZ bit 3..5 minXYZ
-uint8_t accelODRindex=4; // Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, (6:952Hz=na) 
-uint8_t accelFSindex=3;   // Full Scale 0= ±245 dps; 1= ±500 dps; 2= ±1000 dps; 3= ±2000 dps
+uint8_t accelODRindex=5; // Sample Rate 0:off, 1:10Hz, 2:50Hz, 3:119Hz, 4:238Hz, 5:476Hz, (6:952Hz=na) 
+uint8_t accelFSindex=3;   // Full Scale// 0: ±2g ; 1: ±24g ; 2: ±4g ; 3: ±8g
 
 void setup() {
   Serial.begin(115200); 
@@ -37,8 +37,8 @@ void setup() {
   pinMode(LED_BUILTIN,OUTPUT); 
   delay(10);
   if (!IMU.begin()) { Serial.println(F("Failed to initialize IMU!")); while (1);  }
-  IMU.setGyroFS(accelFSindex);   
-  IMU.setGyroODR(accelODRindex);   
+  IMU.setAccelFS(accelFSindex);   
+  IMU.setAccelODR(accelODRindex);   
   calibrateAccelMenu();
 }
 
@@ -64,15 +64,18 @@ void printSetParam(char txt[], float param[3])
 void calibrateAccelMenu()
 {char incomingByte = 0;
  byte b;
+ uint16_t NofCalibrationSamples = 1000;
  while (1)  //(incomingByte!='X') 
  {  Serial.println(F("\n\n")); 
     Serial.println(F(" Calibrate Accelerometer Offset and Slope"));
-    Serial.println(F(" Before calibrating choose the Full Scale setting and Output Data Rate"));
+    Serial.println(F(" Before calibrating choose the Full Scale (FS) setting and Output Data Rate (ODR). The accelerometer and the"));
+    Serial.println(F(" gyroscope share their ODR, so the setting here must be the same as in the DIY_Calibration_Gyroscope sketch."));
     Serial.println(F(" Place the board on a horizontal surface with one of its axes vertical and hit enter to start a calibration"));
     Serial.println(F(" measurement. Each of the axes must be measured pointing up and pointing down, so a total of 6 measurements."));
     Serial.println(F(" The program recognises which axis is vertical and shows which were measured successfully. If the angle is to"));
     Serial.println(F(" far oblique the measurement is not valid.\n  ")); 
     Serial.println(F(" (enter)  Start a calibration measurement. "));
+    Serial.print  (F("   (N)    Number of calibration samples "));Serial.println(NofCalibrationSamples);
     Serial.print  (F("   (F)    Full Scale setting "));Serial.print(accelFSindex);Serial.print(" = ");Serial.print(IMU.getAccelFS(),0);Serial.println(F("g"));
     Serial.print  (F("   (R)    Output Data Rate (ODR) setting "));Serial.print(accelODRindex);Serial.print(" = ");Serial.print(IMU.getAccelODR(),0);Serial.println(F("Hz (actual value)"));
     
@@ -84,7 +87,7 @@ void calibrateAccelMenu()
     for (int i=0;i<=2;i++){  Serial.print(xyz[i]); if (bitRead(acceMMlOK,i+3)==1)Serial.print("- = ( -OK- ) "); else Serial.print("- = not done "); }
    
  //   Serial.println(F("\n\nCurrent  accelerometer calibration values (copy/paste-able)\n"));
-    Serial.println(F("\n\n Accelerometer code"));
+    Serial.println(F("\n\n   // Accelerometer code"));
     Serial.print(F("   IMU.setAccelFS(")); Serial.print(accelFSindex);
     Serial.print(F(");\n   IMU.setAccelODR("));Serial.print(accelODRindex);Serial.println(");");
 
@@ -107,20 +110,21 @@ void calibrateAccelMenu()
                   Serial.print("\n\n\n\n\n\n\n\n\n"); 
                   break;
                 }  
+      case 'N': { readAnswer("\n\n\n\n\n\nThe number of calibration samples ", NofCalibrationSamples);
+                  break;}
       case 'C': {};        
-      default :   calibrateAccelSlope();
+      default :   calibrateAccel(NofCalibrationSamples);
     }  
   }
 }
 
-void calibrateAccelSlope()
+void calibrateAccel(uint16_t NofSamples)
 {  boolean validMmt=false;
    float x,y,z;
    Serial.println(F("\n\n\n\n\n\n\n\n\n\n\n")); 
    Serial.println(F("measuring \n")); 
-   IMU.setAccelSlope(1,1,1);
-   IMU.setAccelODR(5);  //476 Hz
-   raw_N_Accel(1000,x,y,z);
+//   IMU.setAccelODR(5);  //476 Hz
+   raw_N_Accel(NofSamples,x,y,z);
    if (abs(x)>max(abs(y),abs(z)))
    {    Serial.println(F("X detected"));  
        if (sqrt(y*y+z*z)/x<accelCriterion)
@@ -170,7 +174,32 @@ char readChar()
    return ch;
 }
 
-void raw_N_Accel(unsigned int N, float& averX, float& averY, float& averZ) 
+void readAnswer(char msg[], uint16_t& param)
+{ char ch=0;
+  byte count=0;
+  const byte NofChars = 8;
+  char ans[NofChars];
+  while (Serial.available()){Serial.read();}  //empty read buffer
+  Serial.print(msg); 
+  Serial.print(param); 
+  Serial.print(F(" Enter new value ")); 
+  while (byte(ch)!=10 && byte(ch)!=13 && count<(NofChars-1)   )
+  {  if (Serial.available())
+     {  ch= Serial.read();
+        ans[count]=ch;
+        count++;
+     }
+  }      
+  ans[count]=0;
+  Serial.println(ans);
+  if (count>1) param= atoi(ans);
+  while (Serial.available()){Serial.read();}
+     Serial.println(F("\n\n\n\n\n\n\n")); 
+}
+
+
+
+void raw_N_Accel(uint16_t N, float& averX, float& averY, float& averZ) 
 {    float x, y, z;
      averX=0; averY =0;averZ =0;
      for (int i=1;i<=N;i++)

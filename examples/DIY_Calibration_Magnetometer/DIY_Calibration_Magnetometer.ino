@@ -30,7 +30,7 @@ float EarthMagnetStrength = 49.0;  //= µT
 
 boolean magnetOK=false;
 uint8_t magnetODRindex=8;  // (0..8)->{0.625,1.25,2.5,5.0,10,20,40,80,400}Hz
-uint8_t magnetFSindex=0;   // 0=±400.0; 1=±800.0; 2=±1200.0 , 3=±1600.0  (µT) Only setting 0 turns out to be working
+uint8_t magnetFSindex=0;   // 0=±400.0; 1=±800.0; 2=±1200.0 , 3=±1600.0  (µT) 
 
 
 void setup() {
@@ -82,12 +82,14 @@ void calibrateMagnetMenu()
     Serial.println(F("E.g. in my case (Northern hemisphere)declination=0°, inclination=67°, means the aiming direction is South and a"));
     Serial.println(F("rather steep 67° above the horizon. "));
     Serial.println(F("The magnetic field measurement will be heavily disturbed by your set-up, so an \"in-situ\" calibration is advised.\n"));
+    Serial.print  (F(" (F) Full Scale setting "));Serial.print(magnetFSindex);Serial.print(" = ±"); Serial.print(IMU.getMagnetFS(),0);Serial.println(F(" µT"));
     Serial.print  (F(" (R) Output Data Rate (ODR) setting "));Serial.print(magnetODRindex);Serial.print(" = ");Serial.print(IMU.getMagnetODR(),0);Serial.println(F("Hz (actual value)"));
     Serial.print  (F(" (L) Local intensity of Earth magnetic field  "));Serial.print(EarthMagnetStrength);Serial.println(F(" µT  Change into your local value."));    
     Serial.println(F(" (C) Calibrate Magnetometer, Twist board around to find min-max values or aim along earth mag field,  press enter to stop\n"));
 
-    Serial.println(F("    Magnetometer code"));
-    Serial.print(F("   IMU.setMagnetODR("));Serial.print(magnetODRindex);Serial.println(");");
+    Serial.println(F("   // Magnetometer code"));
+    Serial.print  (F("   IMU.setMagnetFS("));Serial.print(magnetFSindex);Serial.println(");");
+    Serial.print  (F("   IMU.setMagnetODR("));Serial.print(magnetODRindex);Serial.println(");");
     printSetParam("   IMU.setMagnetOffset",IMU.magnetOffset);
     Serial.println();
     printSetParam("   IMU.setMagnetSlope ",IMU.magnetSlope); 
@@ -97,6 +99,12 @@ void calibrateMagnetMenu()
     { case 'L': { readAnswer("\n\nLocal Earth Magnetic Field intensity  " ,EarthMagnetStrength  );   break;}
       case 'C': { calibrateMagnet() ;
                   Serial.print(F("\n\n\n\n\n\n"));
+                  break;}
+      case 'F': { Serial.print (F("\n\nEnter new FS nr 0=±400.0; 1=±800.0; 2=±1200.0 , 3=±1600.0  (µT)> ")); 
+                  b= readChar()-48; Serial.println(b);
+                  if (b!=magnetFSindex && b >=0 && b<=3) magnetFSindex=b;
+                  IMU.setMagnetFS(magnetFSindex); 
+                  Serial.print("\n\n\n"); 
                   break;}
       case 'R': { Serial.print (F("\n\nEnter new ODR nr 6: 40Hz, 7: 80Hz, 8: 400Hz not adviced 0..5: 0.625,1.25,2.5,5.0,10,20 Hz  ")); 
                   b= readChar()-48; Serial.println(b);
@@ -125,7 +133,6 @@ void readAnswer(char msg[], float& param)
   byte count=0;
   const byte NofChars = 8;
   char ans[NofChars];
-  float val;
   while (Serial.available()){Serial.read();}  //empty read buffer
   Serial.print(msg); 
   Serial.print(param); 

@@ -38,8 +38,8 @@ const float gyroSlopeCriterion = 50;  //Smaller value requires more pureness of 
 char xyz[3]= {'X','Y','Z'};
 boolean gyroOffsetOK=false;
 boolean gyroSlopeOK[3]={false,false,false};
-uint8_t gyroODRindex=4;
-uint8_t gyroFSindex=3;   // (0= ±245 dps; 1= ±500 dps; 2= ±1000 dps; 3= ±2000 dps)
+uint8_t gyroODRindex=5;
+uint8_t gyroFSindex=2;   // (0= ±245 dps; 1= ±500 dps; 2= ±1000 dps; 3= ±2000 dps)
 
 void setup() {
   Serial.begin(115200); 
@@ -77,12 +77,15 @@ void printSetParam(char txt[], float param[3])
 void calibrateGyroMenu()
 { char incomingByte = 0;
   byte b;
-  float turnangle = 180;
+  uint16_t turnangle = 180;
+  uint16_t NofCalibrationSamples = 1000;
   while (1)//    (incomingByte!='X') 
   {
     if (!gyroOffsetOK) 
     {  Serial.println(F("\n\nStep 1       CALIBRATE GYROSCOPE OFFSET "));
-       Serial.println(F("First choose the sample frequency (ODR) and the Full Scale value."));  
+       Serial.println(F("First choose the sample frequency (ODR) and the Full Scale value. The accelerometer and the gyroscope"));  
+       Serial.println(F("share their ODR, so the setting here must be the same as in the DIY_Calibration_Gyroscope sketch."));  
+       Serial.println(F("This is far more important for the Gyroscope than for the accelerometer. "));  
        Serial.println(F("Next enter \"O\" to start the gyroscope offset measurement. \nDuring this offset measurement the sensor must be kept still.\n"));  
     } else   
     {  Serial.println(F("\n\nStep 2       CALIBRATE GYROSCOPE SLOPE")); 
@@ -95,9 +98,10 @@ void calibrateGyroMenu()
        Serial.println(F("must be measured. The program automatically detects which. \n"));
 
        Serial.println(F(" (A) Change the measuring angle to turn the board"));
-       Serial.print  (F(" (C) Calibrate Slope, turn the board over "));Serial.print(turnangle,0);Serial.println(F("° and press enter when finished "));
+       Serial.print  (F(" (C) Calibrate Slope ==>> Turn the board over "));Serial.print(turnangle);Serial.println(F("° and press enter when finished "));
     }  Serial.print  (F(" (F) Full Scale setting "));Serial.print(gyroFSindex);Serial.print(" = "); Serial.print(IMU.getGyroFS(),0);Serial.println(F("°/s"));
        Serial.print  (F(" (R) Output Data Rate (ODR) setting "));Serial.print(gyroODRindex);Serial.print(" = ");Serial.print(IMU.getGyroODR(),0);Serial.println(F("Hz (actual value)"));
+       Serial.print  (F(" (N) Number of calibration samples "));Serial.println(NofCalibrationSamples);
        Serial.println(F(" (O) Calibrate Offset (keep board still during measurement)"));
      
        Serial.println(F("\nOffset calibration ( -OK- )"));
@@ -106,7 +110,7 @@ void calibrateGyroMenu()
        {   Serial.print(xyz[i]);
            if (gyroSlopeOK[i]) Serial.print(F("= ( -OK- ) ")); else Serial.print(F("= not done ")); 
        }
-    Serial.println(F("\n\n   Gyroscope code"));
+    Serial.println(F("\n\n   // Gyroscope code"));
     Serial.print  (F    ("   IMU.setGyroFS("));   Serial.print(gyroFSindex);
     Serial.print(  F(");\n   IMU.setGyroODR("));Serial.print(gyroODRindex);Serial.println(");");
     printSetParam("   IMU.setGyroOffset ",IMU.gyroOffset); 
@@ -138,17 +142,19 @@ void calibrateGyroMenu()
                   Serial.print("\n\n\n"); 
                   break;
                 }  
-      case 'O': { calibrateGyroOffset();     }
+      case 'N': { readAnswer("\n\n\n\n\n\nThe number of calibration samples ", NofCalibrationSamples);
+                  break;}
+      case 'O': { calibrateGyroOffset(NofCalibrationSamples);     }
     }    
    Serial.println(""); 
   }
 }
 
-void calibrateGyroOffset()  // don't move the board during calibration
+void calibrateGyroOffset(uint16_t N)  // don't move the board during calibration
 {  float x, y, z;// , addX=0, addY=0, addZ=0  ;
    Serial.println(F("\n\n\n\nMeasuring offset. Just a moment.")); 
    Serial.println(F("\n\nKeep the board still during measurement")); 
-   raw_N_Gyro(1000,x,y,z);
+   raw_N_Gyro(N,x,y,z);
    IMU.setGyroOffset(x, y,z); // Store the average measurements as offset
    Serial.print("\n\n\n\n\n"); 
    gyroOffsetOK=true;
@@ -225,12 +231,12 @@ char readChar()
    return ch;
 }
 
-void readAnswer(char msg[], float& param)
+void readAnswer(char msg[], uint16_t& param)
 { char ch=0;
   byte count=0;
   const byte NofChars = 8;
   char ans[NofChars];
-  float val;
+//  float val;
   while (Serial.available()){Serial.read();}  //empty read buffer
   Serial.print(msg); 
   Serial.print(param); 
@@ -244,7 +250,7 @@ void readAnswer(char msg[], float& param)
   }      
   ans[count]=0;
   Serial.println(ans);
-  if (count>1) param= atof(ans);
+  if (count>1) param= atoi(ans);
   while (Serial.available()){Serial.read();}
      Serial.println("\n\n\n\n\n\n\n"); 
 }

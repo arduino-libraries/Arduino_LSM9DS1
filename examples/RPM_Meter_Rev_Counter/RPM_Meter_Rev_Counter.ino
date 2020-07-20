@@ -2,7 +2,7 @@
  * Arduino LSM9DS1 - RPM Meter and Rev counter.
  * Example for V2 of the LSM9DS1 library.
  * 
- * Writtenby Femme Verbeek  12 june 2020
+ * Writtenby Femme Verbeek  14 july 2020
  * 
  * This program demonstrates the use of the LSM9DS1 Gyroscope 
  * When placed on a record turntable it will show the rotation speed in RPM, 33.33 or 45
@@ -26,16 +26,18 @@ void setup()
 
    IMU.gyroUnit =  REVSPERMINUTE ;          //change output unit of readGyro
 
-//************        In order for this program to work properly, it needs calibration           ****************
-//************  Replace the lines below by the Gyroscope output of the DIY Calibration program   ****************
-
+//*******   The gyroscope needs to be calibrated. Offset controls drift and Slope scales the measured rotation angle  *********
+//*****************   Copy/Replace the lines below by the output of the DIY_Calibration_Gyroscope sketch   ********************
    IMU.setGyroFS(3);
    IMU.setGyroODR(5);
-   IMU.setGyroOffset (0.00, 0.00, 0.00);
-   IMU.setGyroSlope (1.00, 1.00, 1.00);
+   IMU.setGyroOffset (0,0,0);  // = uncalibrated
+   IMU.setGyroSlope  (1,1,1);  // = uncalibrated
+//*****************************************************************************************************************************     
+//*********  FS  Full Scale     range  0: ±245°/s  1: ±500°/s  2: ±1000°/s  Default= 3: ±2000°/s    ***************************
+//*********  ODR Output Data Rate range  0:off, 1:10Hz, 2:50Hz, Default= 3:119Hz, 4:238Hz, 5:476Hz, (not working 6:952Hz) *****
+//*****************************************************************************************************************************     
 
-//*****************************************************************************************************************     
-    Serial.println("RPM_X \t RPM_Y \t RPM_Z \t Revs_X \t Revs_y \t Revs_Z ");   // legend in case you use the serial plotter
+   Serial.println("RPM_X \t RPM_Y \t RPM_Z \t Revs_X \t Revs_y \t Revs_Z ");   // legend in case you use the serial plotter
 }
 
 float countRevsX=0, countRevsY=0, countRevsZ=0;

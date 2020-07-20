@@ -13,6 +13,8 @@ links:
 
 [Information about Earth Magnetic field](https://en.wikipedia.org/wiki/Earth%27s_magnetic_field)
 
+[Geomagnetic Calculator of the NOAA](https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml?#igrfwmm)
+
 -----------------------------------------------------------------------------
 ## Contents: 	
 1. Introduction
@@ -185,9 +187,9 @@ FS settings
 | nr |setAccelFS(nr)| setGyroFS(nr)|setMagnetFS(nr) |
 |:----:|:-------------:|:-------------:|:-----------------:|
 |0   | ±2 g	| ±245 °/s | ±400 µT|
-|1   | ±24 g | ±500 °/s	| NA (±800 µT)|
-|2   | ±4 g	| ±1000 °/s	| NA (±1200 µT)|
-|3   | ±8 g	| ±2000 °/s	| NA (±1600 µT)|
+|1   | ±24 g | ±500 °/s	| ±800 µT|
+|2   | ±4 g	| ±1000 °/s	| ±1200 µT|
+|3   | ±8 g	| ±2000 °/s	| ±1600 µT|
 
 Datasheet anomalies
 *  Upon  *setAccelFS(1);*  the needed multiplication factor should be 16 but turns out to be 24, 

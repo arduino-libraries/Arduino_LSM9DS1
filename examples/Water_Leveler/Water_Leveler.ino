@@ -4,29 +4,35 @@
  * Calibration makes the difference between a few degrees and within a degree accuracy
  * Run the DIY calibration program first and copy/paste the Accelerometer calibration data below where it's indicated.
  * 
+ *   The circuit:
+ *  - Arduino Nano 33 BLE (Sense)
+ *  - or Arduino connected to LSM9DS1 breakout board
+ * 
  * Written by Femme Verbeek 
  *     6 June 2020  
  * Released to the public domain
 */
 #include <Arduino_LSM9DS1.h>
 
-void setup() {
+void setup()
+{
    Serial.begin(115200);
    while(!Serial);   //wait for a serial connection
    delay(1);
    if (!IMU.begin()) {Serial.println("Failed to initialize IMU!"); while (1);  }
-   IMU.setAccelODR(5);  //476 Hz
 
-//*****************         In order for this program to work properly, it needs calibration              ****************
-//*****************  Replace the lines below by the accelerometer output of the DIY Calibration program   ****************
+/*****************  For an improved accuracy run the DIY_Calibration_Accelerometer sketch first.   ****************
+*****************       Copy/Replace the lines below by the code output of the program            ****************/
+   IMU.setAccelFS(2);           
+   IMU.setAccelODR(3);            
+   IMU.setAccelOffset(0, 0, 0);  // 0,0,0 = uncalibrated
+   IMU.setAccelSlope (1, 1, 1);  // 1,1,1 = uncalibrated
+/***********************************************************************************************************************************
+*******  FS  Full Scale         range 0:±2g | 1:±24g | 2: ±4g | 3: ±8g  (default=2)                                           ******
+*******  ODR Output Data Rate   range 0:off | 1:10Hz | 2:50Hz | 3:119Hz | 4:238Hz | 5:476Hz, (default=3)(not working 6:952Hz) ******
+************************************************************************************************************************************/
 
-   IMU.setAccelFS(3);
-   IMU.setAccelODR(5);
-   IMU.setAccelOffset(0.00, 0.00, 0.00);
-   IMU.setAccelSlope (1.00, 1.00, 1.00);
-     
-//****************************************************************************************************************************     
-   Serial.println("pitchX\tpitchY"); //shows in the legend of the serial plotter.
+   Serial.println(" pitchX \t pitchY"); //shows in the legend of the serial plotter.
 }
 
 void loop() 
