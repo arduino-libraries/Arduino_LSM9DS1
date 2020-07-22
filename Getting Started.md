@@ -18,15 +18,22 @@ from the Arduino library installation directory
 
 ## Calibration
 
-If you want to make use of the new calibration possibilities run the interactive example sketch
+If you want to make use of the new calibration possibilities run the interactive example sketches
 DIY_Calibration first. Follow the directions on the screen of the serial monitor. Copy the code
 from the screen into the setup() of your sketch. 
 See [instruction video](https://youtu.be/BLvYFXoP33o)
 
+It turned out that the best calibration for the Gyroscope depended on the chip's Full Scale and Output Data Rate.
+For this reason changing these settings has been added in the calibration programs. 
+
+The functions readAccel, readGyro, readMagnet produce calibrated data in the unit of choise 
+The functions readRawAccel, readRawGyro, readRawMagnet produce uncalibrated data and are meant for calibration purposes.
+
 ## Use any of the new setting possibilities by placing commands in your sketch
 All the "set" methods have a corresponding "get" function.
 
-**Choose the Output Data Rate**
+**Output Data Rate** 
+(for read... and readRaw... functions)
 ```
 (range)=  (0..5) -> { off, 10, 50, 119, 238, 476}  Hz  default = 119hz
   IMU.setAccelODR(range); 
@@ -36,14 +43,16 @@ All the "set" methods have a corresponding "get" function.
 IMU.setMagnetODR(range); 
 ```
 
-**Choose the Full Scale setting**
+**Full Scale setting**
+(for read... and readRaw... functions)
 ```
    IMU.setAccelFS(range); // 0: ±2g ; 1: ±24g ; 2: ±4g ; 3: ±8g
    IMU.setGyroFS(range); // (0= ±245,  1= ±500, 2= ±1000, 3= ±2000) °/s
    IMU.setMagnetFS(range); // 0=±400.0; 1=±800.0; 2=±1200.0 , 3=±1600.0  (µT)
 ```
 
-**Choose the unit you want to get the output in**
+**Output unit unit you want to get the output in**
+(for read... and readRaw... functions)
 ```
    IMU.accelUnit = GRAVITY;      //  GRAVITY   OR  METERPERSECOND2 
    IMU.gyroUnit = DEGREEPERSECOND;   // DEGREEPERSECOND  RADIANSPERSECOND REVSPERMINUTE REVSPERSECOND

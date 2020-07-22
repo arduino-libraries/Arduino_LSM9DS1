@@ -122,14 +122,15 @@ void LSM9DS1Class::end()
   
   _wire->end(); 
   
-  // There has been a problem with the power usage of the Arduino Nano BLE boards. 
- 
+ // There has been a problem with the power usage of the Arduino Nano BLE boards. 
  // Due to a switch in pinnumbers the pull-ups keep drawing current after the call to IMU.end();
- // This shortens battery life. The solution below may be counter productive when future updates solve 
- // the switched pin issue. If it is a problem now you can uncomment the follwing lines.
- 
- // pinMode(PIN_ENABLE_I2C_PULLUP, OUTPUT);    // this restores the energy usage to very low power
- // digitalWrite(PIN_ENABLE_I2C_PULLUP, HIGH); // see https://forum.arduino.cc/index.php?topic=691488.15
+ // This shortens battery life. Most likely future updates solve the problem.
+ // see https://forum.arduino.cc/index.php?topic=691488.15
+ // code for if the old value is used
+#if defined(ARDUINO_ARDUINO_NANO33BLE) && PIN_ENABLE_SENSORS_3V3 == 32
+  pinMode(PIN_ENABLE_I2C_PULLUP, OUTPUT);    // this restores the energy usage to very low power
+  digitalWrite(PIN_ENABLE_I2C_PULLUP, HIGH); 
+#endif 
 }
 
 //************************************      Acceleration      *****************************************

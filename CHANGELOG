@@ -15,11 +15,11 @@ Arduino_LSM9DS1 2.0.0 - 2020.07.10
 * Added support for ODR sample rate, ODR values are automatically calibrated, include fast ODR for magnet
 * Added support for Band width 
 * Added support for changing output unit
-* Added support for separate or combined sensor calibration
+* Added support for separate or combined sensor calibration on all 9 DOF
 * Calibration parameters are dimensionless, independent of each other and of the other settings
-* Includes a DIY calibration program that produces copy/paste-able code
+* Includes DIY calibration programs producing copy/paste-able code
 * Includes readme.md and Getting Started.md
-* Includes examples RPM_meter_Rev_Counter, Water_Leveler, XY_Compass
+* Includes examples RPM_meter_Rev_Counter, Water_Leveler, XY_Compass, SimpleGyroscope, SimpleAccelerometer, SimpleMagnetometer
 * Includes Register_test: demonstrates and verifies all new settings
-* The include programs use a minimul amout of RAM to enable running on something as small as a Arduino Uno. 
+* The included programs use a minimal amount of RAM to enable running on something as small as an Arduino Uno. 
 * The IMU.end() function restores the system to low power usage
