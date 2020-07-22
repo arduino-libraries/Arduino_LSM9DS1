@@ -7,3 +7,19 @@ Arduino_LSM9DS1 1.0.0 - 2019.07.31
 Arduino_LSM9DS1 1.1.0 - 2020.02.11
 
 * Added support for FIFO continuous reading of values
+
+Arduino_LSM9DS1 2.0.0 - 2020.07.10
+
+* Added support for Full scale setting, 
+* Added support for Operational mode: off, Accel only, Gyro + Accel
+* Added support for ODR sample rate, ODR values are automatically calibrated, include fast ODR for magnet
+* Added support for Band width 
+* Added support for changing output unit
+* Added support for separate or combined sensor calibration on all 9 DOF
+* Calibration parameters are dimensionless, independent of each other and of the other settings
+* Includes DIY calibration programs producing copy/paste-able code
+* Includes readme.md and Getting Started.md
+* Includes examples RPM_meter_Rev_Counter, Water_Leveler, XY_Compass, SimpleGyroscope, SimpleAccelerometer, SimpleMagnetometer
+* Includes Register_test: demonstrates and verifies all new settings
+* The included programs use a minimal amount of RAM to enable running on something as small as an Arduino Uno. 
+* The IMU.end() function restores the system to low power usage
