@@ -30,7 +30,7 @@ void setup() {
   Serial.print(IMU.accelerationSampleRate());
   Serial.println(" Hz");
   Serial.println();
-  Serial.println("Acceleration in G's");
+  Serial.println("Acceleration in g's");
   Serial.println("X\tY\tZ");
 }
 
