@@ -32,15 +32,15 @@ if (!IMU.begin()) {
 #### See also
 
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `end()`
 
@@ -77,15 +77,15 @@ IMU.end();
 #### See also
 
 * [begin()](#begin)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `readAcceleration()`
 
@@ -127,14 +127,14 @@ if (IMU.accelerationAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `readGyroscope()`
 
@@ -176,14 +176,14 @@ if (IMU.gyroscopeAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `accelerationAvailable()`
 
@@ -223,14 +223,14 @@ if (IMU.accelerationAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `gyroscopeAvailable()`
 
@@ -270,14 +270,14 @@ if (IMU.gyroscopeAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `accelerationSampleRate()`
 
@@ -312,14 +312,14 @@ Serial.println("X\tY\tZ");
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `gyroscopeSampleRate()`
 
@@ -354,14 +354,14 @@ Serial.println("X\tY\tZ");
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `readMagneticField()`
 
@@ -403,14 +403,14 @@ if (IMU.magneticFieldAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [magneticFieldSampleRate()](#magneticFieldSampleRate)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [magneticFieldSampleRate()](#magneticfieldsamplerate)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `magneticFieldSampleRate()`
 
@@ -445,14 +445,14 @@ Serial.println("X\tY\tZ");
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldAvailable()](#magneticfieldavailable)
 
 ### `magneticFieldAvailable()`
 
@@ -492,11 +492,11 @@ if (IMU.magneticFieldAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
-* [readMagneticField()](#readMagneticField)
-* [magneticFieldAvailable()](#magneticFieldAvailable)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
+* [readMagneticField()](#readmagneticfield)
+* [magneticFieldAvailable()](#magneticfieldavailable)
