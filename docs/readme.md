@@ -1,6 +1,6 @@
 # ArduinoLSM9DS1 library
 
-The ArduinoLSM9DS1 library allows you to use the inertial measurement unit (IMU) available on the Arduino&reg; Nano 33 BLE board. The IMU is a LSM9DS1, it is a 3-axis accelerometer, 3-axis gyroscope, and 3-axis magnetometer. The IMU is connected to the Nano 33 BLE board's microcontroller through I2C. The values returned are signed floats.
+The ArduinoLSM9DS1 library allows you to use the inertial measurement unit (IMU) available on the Arduino&reg; Nano 33 BLE board. The IMU is a [LSM9DS1](https://www.st.com/resource/en/datasheet/lsm9ds1.pdf), it is a 3-axis accelerometer, 3-axis gyroscope, and 3-axis magnetometer. The IMU is connected to the Nano 33 BLE board's microcontroller through I2C. The values returned are signed floats.
 
 To use this library:
 
