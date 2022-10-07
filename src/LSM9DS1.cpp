@@ -259,7 +259,7 @@ int LSM9DS1Class::writeRegister(uint8_t slaveAddress, uint8_t address, uint8_t v
 }
 
 #ifdef ARDUINO_ARDUINO_NANO33BLE
-LSM9DS1Class IMU(Wire1);
+LSM9DS1Class IMU_LSM9DS1(Wire1);
 #else
-LSM9DS1Class IMU(Wire);
+LSM9DS1Class IMU_LSM9DS1(Wire);
 #endif
